@@ -137,6 +137,7 @@
 		A10000000000000000000080 /* HabitTrackerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/widgets/HabitTrackerWidget.swift; sourceTree = SOURCE_ROOT; };
 		A10000000000000000000081 /* HabitTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = src/config/HabitTracker.entitlements; sourceTree = SOURCE_ROOT; };
 		A10000000000000000000082 /* HabitWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = src/config/HabitWidgets.entitlements; sourceTree = SOURCE_ROOT; };
+		A1000000000000000000008F /* HabitWidgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = src/config/HabitWidgets-Info.plist; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -227,6 +228,7 @@
 			children = (
 				A10000000000000000000012 /* AppConstants.swift */,
 				A10000000000000000000081 /* HabitTracker.entitlements */,
+				A1000000000000000000008F /* HabitWidgets-Info.plist */,
 				A10000000000000000000082 /* HabitWidgets.entitlements */,
 			);
 			path = config;
@@ -611,9 +613,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Habit Widgets";
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = com.apple.widgetkit-extension;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = src/config/HabitWidgets-Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -640,9 +641,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Habit Widgets";
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = com.apple.widgetkit-extension;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = src/config/HabitWidgets-Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
