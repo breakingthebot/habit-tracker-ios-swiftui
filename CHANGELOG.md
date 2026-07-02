@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 - 2026-07-02
+- Add a habit detail screen with streak stats, recent 7-day history, and full completion-date history.
+- Add a reusable history builder utility and history-day model for timeline data.
+- Wire habit row taps into detail navigation without breaking the completion toggle.
+- Add tests for history timeline generation and store completion-date ordering.
+
 ## 0.4.0 - 2026-07-02
 - Add a GitHub Actions workflow that runs the XCTest suite on a macOS runner.
 - Add a shared Xcode scheme so CI can resolve the app and test targets from a fresh checkout.

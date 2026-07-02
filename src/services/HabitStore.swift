@@ -1,7 +1,7 @@
 //
 // HabitStore.swift
 // Observable store that manages habits, validation, and completion state.
-// Connects to: models/Habit.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/StreakCalculator.swift
+// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/StreakCalculator.swift
 // Created: 2026-07-01
 //
 
@@ -144,6 +144,13 @@ final class HabitStore: ObservableObject {
     return habit.completedDayKeys.contains(todayKey)
   }
 
+  /// Finds the latest version of a habit by identifier.
+  /// - Parameter id: The identifier to look up.
+  /// - Returns: The current stored habit, if it still exists.
+  func habit(withID id: UUID) -> Habit? {
+    habits.first(where: { $0.id == id })
+  }
+
   /// Calculates the current streak for a habit.
   /// - Parameter habit: The habit to inspect.
   /// - Returns: The number of consecutive completed days ending today or yesterday.
@@ -151,6 +158,37 @@ final class HabitStore: ObservableObject {
     StreakCalculator.currentStreak(
       completedDayKeys: habit.completedDayKeys,
       asOf: Date(),
+      calendar: calendar
+    )
+  }
+
+  /// Calculates the total number of completed days for a habit.
+  /// - Parameter habit: The habit to inspect.
+  /// - Returns: The number of stored completion days.
+  func totalCompletions(for habit: Habit) -> Int {
+    habit.completedDayKeys.count
+  }
+
+  /// Builds a recent history timeline for the supplied habit.
+  /// - Parameters:
+  ///   - habit: The habit to inspect.
+  ///   - dayCount: The number of recent days to include.
+  /// - Returns: A newest-first recent history timeline.
+  func recentHistory(for habit: Habit, dayCount: Int = 7) -> [HabitHistoryDay] {
+    HabitHistoryBuilder.recentDays(
+      completedDayKeys: habit.completedDayKeys,
+      referenceDate: Date(),
+      dayCount: dayCount,
+      calendar: calendar
+    )
+  }
+
+  /// Returns completion dates sorted from newest to oldest.
+  /// - Parameter habit: The habit to inspect.
+  /// - Returns: Sorted completion dates for the habit.
+  func completionDates(for habit: Habit) -> [Date] {
+    HabitHistoryBuilder.completionDates(
+      completedDayKeys: habit.completedDayKeys,
       calendar: calendar
     )
   }

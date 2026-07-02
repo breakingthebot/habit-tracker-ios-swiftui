@@ -1,7 +1,7 @@
 //
 // HabitListView.swift
-// Root screen that renders loading, empty, and populated habit states.
-// Connects to: services/HabitStore.swift, components/HabitRowView.swift, components/AddHabitView.swift
+// Root screen that renders loading, empty, list, and navigation flows for habits.
+// Connects to: services/HabitStore.swift, components/HabitRowView.swift, components/AddHabitView.swift, components/HabitDetailView.swift
 // Created: 2026-07-01
 //
 
@@ -9,12 +9,13 @@ import SwiftUI
 
 struct HabitListView: View {
   @ObservedObject var store: HabitStore
+  @State private var navigationPath: [UUID] = []
   @State private var isPresentingAddHabit = false
   @State private var habitBeingEdited: Habit?
   @State private var habitPendingDeletion: Habit?
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $navigationPath) {
       Group {
         if store.isLoading {
           ProgressView("Loading habits...")
@@ -37,6 +38,10 @@ struct HabitListView: View {
                   currentStreak: store.streak(for: habit),
                   toggleAction: { store.toggleCompletion(for: habit) }
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                  navigationPath.append(habit.id)
+                }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                   Button("Delete", role: .destructive) {
                     habitPendingDeletion = habit
@@ -109,6 +114,9 @@ struct HabitListView: View {
         }
       } message: {
         Text(deleteAlertMessage)
+      }
+      .navigationDestination(for: UUID.self) { habitID in
+        HabitDetailView(store: store, habitID: habitID)
       }
     }
   }

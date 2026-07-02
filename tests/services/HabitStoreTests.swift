@@ -163,6 +163,25 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertEqual(store.habits.map(\.name), ["Walk"])
     XCTAssertEqual(store.errorMessage, "Your changes could not be saved.")
   }
+
+  /// Verifies that the store returns completion dates sorted from newest to oldest.
+  func testCompletionDatesReturnsNewestFirst() {
+    let habit = Habit(
+      id: UUID(),
+      name: "Walk",
+      createdAt: Date(),
+      completedDayKeys: ["2026-06-30", "2026-07-02", "2026-07-01"]
+    )
+    let store = HabitStore(habits: [habit], isLoading: false, persistence: TestHabitPersistence())
+
+    let completionDates = store.completionDates(for: habit)
+    let calendar = Calendar(identifier: .gregorian)
+
+    XCTAssertEqual(
+      completionDates.map { DateValueFormatter.dayKey(for: $0, calendar: calendar) },
+      ["2026-07-02", "2026-07-01", "2026-06-30"]
+    )
+  }
 }
 
 private enum TestPersistenceError: Error {
