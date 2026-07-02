@@ -1,0 +1,19 @@
+# Ignore local environment files, generated artifacts, and repo instructions.
+# Connects to: git hygiene, AGENTS.md exclusion
+# Created: 2026-07-01
+
+.env
+.env.*
+venv/
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+*.log
+dist/
+build/
+DerivedData/
+.build/
+*.xcuserstate
+xcuserdata/
+AGENTS.md

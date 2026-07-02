@@ -1,0 +1,120 @@
+//
+// HabitStore.swift
+// Observable store that manages habits, validation, and completion state.
+// Connects to: models/Habit.swift, utils/DateValueFormatter.swift, utils/StreakCalculator.swift
+// Created: 2026-07-01
+//
+
+import Foundation
+import OSLog
+
+@MainActor
+final class HabitStore: ObservableObject {
+  @Published private(set) var habits: [Habit]
+  @Published private(set) var isLoading: Bool
+  @Published private(set) var errorMessage: String?
+
+  private let calendar: Calendar
+  private let logger: Logger
+
+  init(
+    habits: [Habit] = [],
+    isLoading: Bool = true,
+    errorMessage: String? = nil,
+    calendar: Calendar = .current,
+    logger: Logger = Logger(subsystem: "HabitTracker", category: "HabitStore")
+  ) {
+    self.habits = habits
+    self.isLoading = isLoading
+    self.errorMessage = errorMessage
+    self.calendar = calendar
+    self.logger = logger
+  }
+
+  /// Simulates the initial app bootstrap before the first screen is shown.
+  func loadInitialHabits() async {
+    logger.info("Loading initial habits")
+    isLoading = true
+
+    do {
+      try await Task.sleep(nanoseconds: AppConstants.loadingDelayNanoseconds)
+      isLoading = false
+      logger.info("Initial habits loaded")
+    } catch {
+      isLoading = false
+      errorMessage = "The app could not finish loading."
+      logger.error("Loading failed: \(error.localizedDescription, privacy: .public)")
+    }
+  }
+
+  /// Adds a new habit after validating the user-provided name.
+  /// - Parameter rawName: The untrimmed habit name from the UI.
+  func addHabit(named rawName: String) {
+    let trimmedName = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    guard !trimmedName.isEmpty else {
+      errorMessage = "Enter a habit name before saving."
+      logger.warning("Rejected empty habit name")
+      return
+    }
+
+    guard trimmedName.count <= AppConstants.maxHabitNameLength else {
+      errorMessage = "Habit names must be \(AppConstants.maxHabitNameLength) characters or fewer."
+      logger.warning("Rejected long habit name")
+      return
+    }
+
+    let habit = Habit(
+      id: UUID(),
+      name: trimmedName,
+      createdAt: Date(),
+      completedDayKeys: []
+    )
+
+    habits.insert(habit, at: 0)
+    errorMessage = nil
+    logger.info("Added habit named \(trimmedName, privacy: .public)")
+  }
+
+  /// Toggles whether a habit is completed for the provided day.
+  /// - Parameters:
+  ///   - habit: The habit to update.
+  ///   - date: The calendar day being toggled.
+  func toggleCompletion(for habit: Habit, on date: Date = Date()) {
+    guard let index = habits.firstIndex(where: { $0.id == habit.id }) else {
+      errorMessage = "That habit could not be updated."
+      logger.error("Missing habit for toggle")
+      return
+    }
+
+    let dayKey = DateValueFormatter.dayKey(for: date, calendar: calendar)
+    let isCurrentlyCompleted = habits[index].completedDayKeys.contains(dayKey)
+    habits[index] = habits[index].updatingCompletion(dayKey: dayKey, isCompleted: !isCurrentlyCompleted)
+    errorMessage = nil
+    logger.info("Toggled completion for \(habit.name, privacy: .public) on \(dayKey, privacy: .public)")
+  }
+
+  /// Returns whether the supplied habit is complete today.
+  /// - Parameter habit: The habit to inspect.
+  /// - Returns: `true` when the habit is completed on the current day.
+  func isCompletedToday(_ habit: Habit) -> Bool {
+    let todayKey = DateValueFormatter.dayKey(for: Date(), calendar: calendar)
+    return habit.completedDayKeys.contains(todayKey)
+  }
+
+  /// Calculates the current streak for a habit.
+  /// - Parameter habit: The habit to inspect.
+  /// - Returns: The number of consecutive completed days ending today or yesterday.
+  func streak(for habit: Habit) -> Int {
+    StreakCalculator.currentStreak(
+      completedDayKeys: habit.completedDayKeys,
+      asOf: Date(),
+      calendar: calendar
+    )
+  }
+
+  /// Clears the current user-facing error.
+  func clearError() {
+    errorMessage = nil
+  }
+}

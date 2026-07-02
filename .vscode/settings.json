@@ -1,0 +1,9 @@
+{
+  "//": "Workspace editor defaults for this repository. Connects to Swift source folders and git hygiene. Created: 2026-07-01",
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "files.exclude": {
+    "**/.build": true,
+    "**/DerivedData": true
+  }
+}
