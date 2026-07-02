@@ -1,7 +1,7 @@
 //
 // HabitListView.swift
 // Root screen that renders loading, empty, list, and navigation flows for habits.
-// Connects to: services/HabitStore.swift, components/HabitRowView.swift, components/AddHabitView.swift, components/HabitDetailView.swift
+// Connects to: services/HabitStore.swift, components/HabitRowView.swift, components/AddHabitView.swift, components/HabitDetailView.swift, components/WeeklyDashboardView.swift
 // Created: 2026-07-01
 //
 
@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HabitListView: View {
   @ObservedObject var store: HabitStore
-  @State private var navigationPath: [UUID] = []
+  @State private var navigationPath: [HabitRoute] = []
   @State private var isPresentingAddHabit = false
   @State private var habitBeingEdited: Habit?
   @State private var habitPendingDeletion: Habit?
@@ -40,7 +40,7 @@ struct HabitListView: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                  navigationPath.append(habit.id)
+                  navigationPath.append(.habitDetail(habit.id))
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                   Button("Delete", role: .destructive) {
@@ -60,6 +60,14 @@ struct HabitListView: View {
       }
       .navigationTitle("Habit Tracker")
       .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          Button {
+            navigationPath.append(.weeklyDashboard)
+          } label: {
+            Label("Weekly Dashboard", systemImage: "chart.bar.xaxis")
+          }
+        }
+
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             isPresentingAddHabit = true
@@ -115,8 +123,13 @@ struct HabitListView: View {
       } message: {
         Text(deleteAlertMessage)
       }
-      .navigationDestination(for: UUID.self) { habitID in
-        HabitDetailView(store: store, habitID: habitID)
+      .navigationDestination(for: HabitRoute.self) { route in
+        switch route {
+        case .habitDetail(let habitID):
+          HabitDetailView(store: store, habitID: habitID)
+        case .weeklyDashboard:
+          WeeklyDashboardView(store: store)
+        }
       }
     }
   }
@@ -139,6 +152,11 @@ struct HabitListView: View {
 
     return "Delete \"\(habitPendingDeletion.name)\"? This cannot be undone."
   }
+}
+
+private enum HabitRoute: Hashable {
+  case habitDetail(UUID)
+  case weeklyDashboard
 }
 
 #Preview {

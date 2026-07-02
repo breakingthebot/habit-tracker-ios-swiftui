@@ -1,7 +1,7 @@
 //
 // HabitStore.swift
 // Observable store that manages habits, validation, and completion state.
-// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/StreakCalculator.swift
+// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, models/WeeklyHabitProgress.swift, models/WeeklyProgressSummary.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/StreakCalculator.swift, utils/WeeklyProgressBuilder.swift
 // Created: 2026-07-01
 //
 
@@ -189,6 +189,26 @@ final class HabitStore: ObservableObject {
   func completionDates(for habit: Habit) -> [Date] {
     HabitHistoryBuilder.completionDates(
       completedDayKeys: habit.completedDayKeys,
+      calendar: calendar
+    )
+  }
+
+  /// Builds the current week's overall dashboard summary.
+  /// - Returns: Aggregate weekly progress metrics across all habits.
+  func weeklySummary() -> WeeklyProgressSummary {
+    WeeklyProgressBuilder.overallSummary(
+      habits: habits,
+      referenceDate: Date(),
+      calendar: calendar
+    )
+  }
+
+  /// Builds current-week progress rows for each habit.
+  /// - Returns: Per-habit weekly progress data sorted by completion strength.
+  func weeklyHabitProgress() -> [WeeklyHabitProgress] {
+    WeeklyProgressBuilder.habitProgress(
+      habits: habits,
+      referenceDate: Date(),
       calendar: calendar
     )
   }

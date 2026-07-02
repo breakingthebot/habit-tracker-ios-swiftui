@@ -182,6 +182,28 @@ final class HabitStoreTests: XCTestCase {
       ["2026-07-02", "2026-07-01", "2026-06-30"]
     )
   }
+
+  /// Verifies that weekly summary returns aggregate counts across all habits.
+  func testWeeklySummaryAggregatesAcrossHabits() {
+    let habits = [
+      Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: ["2026-06-28", "2026-07-02"]),
+      Habit(id: UUID(), name: "Read", createdAt: Date(), completedDayKeys: ["2026-06-29"])
+    ]
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .gmt
+    calendar.firstWeekday = 1
+    let store = HabitStore(
+      habits: habits,
+      isLoading: false,
+      calendar: calendar,
+      persistence: TestHabitPersistence()
+    )
+
+    let summary = store.weeklySummary()
+
+    XCTAssertEqual(summary.totalHabits, 2)
+    XCTAssertEqual(summary.scheduledCheckIns, 14)
+  }
 }
 
 private enum TestPersistenceError: Error {

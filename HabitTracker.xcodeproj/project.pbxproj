@@ -27,6 +27,11 @@
 		A10000000000000000000047 /* HabitHistoryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000048 /* HabitHistoryBuilder.swift */; };
 		A10000000000000000000049 /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000004A /* HabitDetailView.swift */; };
 		A1000000000000000000004B /* HabitHistoryBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000004C /* HabitHistoryBuilderTests.swift */; };
+		A1000000000000000000004D /* WeeklyProgressSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000004E /* WeeklyProgressSummary.swift */; };
+		A1000000000000000000004F /* WeeklyHabitProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000050 /* WeeklyHabitProgress.swift */; };
+		A10000000000000000000051 /* WeeklyProgressBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000052 /* WeeklyProgressBuilder.swift */; };
+		A10000000000000000000053 /* WeeklyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000054 /* WeeklyDashboardView.swift */; };
+		A10000000000000000000055 /* WeeklyProgressBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000056 /* WeeklyProgressBuilderTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +67,11 @@
 		A10000000000000000000048 /* HabitHistoryBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/utils/HabitHistoryBuilder.swift; sourceTree = SOURCE_ROOT; };
 		A1000000000000000000004A /* HabitDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/components/HabitDetailView.swift; sourceTree = SOURCE_ROOT; };
 		A1000000000000000000004C /* HabitHistoryBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests/utils/HabitHistoryBuilderTests.swift; sourceTree = SOURCE_ROOT; };
+		A1000000000000000000004E /* WeeklyProgressSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/models/WeeklyProgressSummary.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000050 /* WeeklyHabitProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/models/WeeklyHabitProgress.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000052 /* WeeklyProgressBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/utils/WeeklyProgressBuilder.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000054 /* WeeklyDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/components/WeeklyDashboardView.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000056 /* WeeklyProgressBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests/utils/WeeklyProgressBuilderTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,6 +136,7 @@
 		A1000000000000000000002D /* components */ = {
 			isa = PBXGroup;
 			children = (
+				A10000000000000000000054 /* WeeklyDashboardView.swift */,
 				A1000000000000000000004A /* HabitDetailView.swift */,
 				A10000000000000000000017 /* HabitListView.swift */,
 				A10000000000000000000018 /* HabitRowView.swift */,
@@ -149,6 +160,8 @@
 			children = (
 				A10000000000000000000013 /* Habit.swift */,
 				A10000000000000000000046 /* HabitHistoryDay.swift */,
+				A10000000000000000000050 /* WeeklyHabitProgress.swift */,
+				A1000000000000000000004E /* WeeklyProgressSummary.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -168,6 +181,7 @@
 				A10000000000000000000015 /* DateValueFormatter.swift */,
 				A10000000000000000000048 /* HabitHistoryBuilder.swift */,
 				A10000000000000000000016 /* StreakCalculator.swift */,
+				A10000000000000000000052 /* WeeklyProgressBuilder.swift */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -186,6 +200,7 @@
 			children = (
 				A1000000000000000000004C /* HabitHistoryBuilderTests.swift */,
 				A1000000000000000000001D /* StreakCalculatorTests.swift */,
+				A10000000000000000000056 /* WeeklyProgressBuilderTests.swift */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -285,11 +300,15 @@
 				A10000000000000000000002 /* AppConstants.swift in Sources */,
 				A10000000000000000000003 /* Habit.swift in Sources */,
 				A10000000000000000000045 /* HabitHistoryDay.swift in Sources */,
+				A1000000000000000000004F /* WeeklyHabitProgress.swift in Sources */,
+				A1000000000000000000004D /* WeeklyProgressSummary.swift in Sources */,
 				A10000000000000000000004 /* HabitStore.swift in Sources */,
 				A10000000000000000000041 /* HabitPersistence.swift in Sources */,
 				A10000000000000000000005 /* DateValueFormatter.swift in Sources */,
 				A10000000000000000000047 /* HabitHistoryBuilder.swift in Sources */,
 				A10000000000000000000006 /* StreakCalculator.swift in Sources */,
+				A10000000000000000000051 /* WeeklyProgressBuilder.swift in Sources */,
+				A10000000000000000000053 /* WeeklyDashboardView.swift in Sources */,
 				A10000000000000000000049 /* HabitDetailView.swift in Sources */,
 				A10000000000000000000007 /* HabitListView.swift in Sources */,
 				A10000000000000000000008 /* HabitRowView.swift in Sources */,
@@ -307,6 +326,7 @@
 				A1000000000000000000000E /* HabitStoreTests.swift in Sources */,
 				A10000000000000000000043 /* HabitPersistenceTests.swift in Sources */,
 				A1000000000000000000004B /* HabitHistoryBuilderTests.swift in Sources */,
+				A10000000000000000000055 /* WeeklyProgressBuilderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

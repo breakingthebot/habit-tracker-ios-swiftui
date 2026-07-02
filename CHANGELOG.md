@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 - 2026-07-02
+- Add a weekly dashboard screen with overall check-in totals, completion rate, and per-habit weekly progress.
+- Add reusable weekly progress models and builder utilities for current-week aggregation.
+- Add dashboard navigation from the habit list without changing the existing history and CRUD flows.
+- Add tests for weekly date windows, weekly aggregate counts, and per-habit sorting.
+
 ## 0.5.0 - 2026-07-02
 - Add a habit detail screen with streak stats, recent 7-day history, and full completion-date history.
 - Add a reusable history builder utility and history-day model for timeline data.
