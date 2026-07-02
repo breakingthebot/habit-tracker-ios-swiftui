@@ -1,7 +1,7 @@
 //
 // HabitStoreTests.swift
-// Unit tests for habit creation and completion state updates.
-// Connects to: src/services/HabitStore.swift, src/models/Habit.swift
+// Unit tests for habit creation, completion state updates, and reminder persistence behavior.
+// Connects to: src/services/HabitStore.swift, src/services/HabitReminderScheduler.swift, src/models/Habit.swift, src/models/HabitReminder.swift
 // Created: 2026-07-01
 //
 
@@ -279,6 +279,110 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertTrue(store.habits[0].completedDayKeys.isEmpty)
     XCTAssertEqual(store.errorMessage, "Your changes could not be saved.")
   }
+
+  /// Verifies that setting a reminder stores the normalized hour and minute.
+  func testSetReminderPersistsReminderTime() async {
+    let habit = Habit(id: UUID(), name: "Read", createdAt: Date(), completedDayKeys: [])
+    let persistence = TestHabitPersistence(initialHabits: [habit])
+    let scheduler = TestHabitReminderScheduler()
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .gmt
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      calendar: calendar,
+      persistence: persistence,
+      reminderScheduler: scheduler
+    )
+    let reminderDate = calendar.date(from: DateComponents(year: 2026, month: 7, day: 2, hour: 15, minute: 45))!
+
+    await store.setReminder(for: habit, at: reminderDate)
+
+    XCTAssertEqual(store.habits[0].reminder, HabitReminder(hour: 15, minute: 45))
+    XCTAssertEqual(persistence.savedHabits[0].reminder, HabitReminder(hour: 15, minute: 45))
+    XCTAssertEqual(scheduler.upsertedHabits.first?.id, habit.id)
+    XCTAssertNil(store.errorMessage)
+  }
+
+  /// Verifies that clearing a reminder removes it from persistence and unschedules notifications.
+  func testClearReminderRemovesReminderAndUnschedules() async {
+    let habit = Habit(
+      id: UUID(),
+      name: "Read",
+      createdAt: Date(),
+      completedDayKeys: [],
+      reminder: HabitReminder(hour: 20, minute: 0)
+    )
+    let persistence = TestHabitPersistence(initialHabits: [habit])
+    let scheduler = TestHabitReminderScheduler()
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: persistence,
+      reminderScheduler: scheduler
+    )
+
+    await store.clearReminder(for: habit)
+
+    XCTAssertNil(store.habits[0].reminder)
+    XCTAssertNil(persistence.savedHabits[0].reminder)
+    XCTAssertEqual(scheduler.removedHabitIDs, [habit.id])
+    XCTAssertNil(store.errorMessage)
+  }
+
+  /// Verifies that permission failures roll reminder changes back.
+  func testSetReminderRollsBackWhenPermissionDenied() async {
+    let originalReminder = HabitReminder(hour: 19, minute: 0)
+    let habit = Habit(
+      id: UUID(),
+      name: "Stretch",
+      createdAt: Date(),
+      completedDayKeys: [],
+      reminder: originalReminder
+    )
+    let persistence = TestHabitPersistence(initialHabits: [habit])
+    let scheduler = TestHabitReminderScheduler(upsertError: HabitReminderSchedulerError.permissionDenied)
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .gmt
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      calendar: calendar,
+      persistence: persistence,
+      reminderScheduler: scheduler
+    )
+    let reminderDate = calendar.date(from: DateComponents(year: 2026, month: 7, day: 2, hour: 15, minute: 45))!
+
+    await store.setReminder(for: habit, at: reminderDate)
+
+    XCTAssertEqual(store.habits[0].reminder, originalReminder)
+    XCTAssertEqual(persistence.savedHabits[0].reminder, originalReminder)
+    XCTAssertEqual(store.errorMessage, "Allow notifications before saving reminders.")
+  }
+
+  /// Verifies that deleting a habit with a reminder also unschedules its notification.
+  func testDeleteHabitRemovesScheduledReminder() async {
+    let habit = Habit(
+      id: UUID(),
+      name: "Meditate",
+      createdAt: Date(),
+      completedDayKeys: [],
+      reminder: HabitReminder(hour: 8, minute: 30)
+    )
+    let scheduler = TestHabitReminderScheduler()
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: TestHabitPersistence(initialHabits: [habit]),
+      reminderScheduler: scheduler
+    )
+
+    store.deleteHabit(habit)
+    await Task.yield()
+
+    XCTAssertTrue(store.habits.isEmpty)
+    XCTAssertEqual(scheduler.removedHabitIDs, [habit.id])
+  }
 }
 
 private enum TestPersistenceError: Error {
@@ -319,5 +423,37 @@ private final class TestHabitPersistence: HabitPersisting {
 
     savedHabits = habits
     saveCallCount += 1
+  }
+}
+
+private final class TestHabitReminderScheduler: HabitReminderScheduling {
+  private(set) var upsertedHabits: [Habit]
+  private(set) var removedHabitIDs: [UUID]
+  private let upsertError: Error?
+  private let removeError: Error?
+
+  init(upsertError: Error? = nil, removeError: Error? = nil) {
+    upsertedHabits = []
+    removedHabitIDs = []
+    self.upsertError = upsertError
+    self.removeError = removeError
+  }
+
+  /// Records reminder scheduling requests or throws the configured error.
+  func upsertReminder(for habit: Habit) async throws {
+    if let upsertError {
+      throw upsertError
+    }
+
+    upsertedHabits.append(habit)
+  }
+
+  /// Records reminder removals or throws the configured error.
+  func removeReminder(for habitID: UUID) async throws {
+    if let removeError {
+      throw removeError
+    }
+
+    removedHabitIDs.append(habitID)
   }
 }

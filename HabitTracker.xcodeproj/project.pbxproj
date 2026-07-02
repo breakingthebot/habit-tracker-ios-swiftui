@@ -36,6 +36,9 @@
 		A10000000000000000000059 /* HabitListFilterer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000005A /* HabitListFilterer.swift */; };
 		A1000000000000000000005B /* HabitListFiltererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000005C /* HabitListFiltererTests.swift */; };
 		A1000000000000000000005D /* EditCompletionDateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000005E /* EditCompletionDateView.swift */; };
+		A1000000000000000000005F /* HabitReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000060 /* HabitReminder.swift */; };
+		A10000000000000000000061 /* HabitReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000062 /* HabitReminderScheduler.swift */; };
+		A10000000000000000000063 /* HabitReminderSchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000064 /* HabitReminderSchedulerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +83,9 @@
 		A1000000000000000000005A /* HabitListFilterer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/utils/HabitListFilterer.swift; sourceTree = SOURCE_ROOT; };
 		A1000000000000000000005C /* HabitListFiltererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests/utils/HabitListFiltererTests.swift; sourceTree = SOURCE_ROOT; };
 		A1000000000000000000005E /* EditCompletionDateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/components/EditCompletionDateView.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000060 /* HabitReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/models/HabitReminder.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000062 /* HabitReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/services/HabitReminderScheduler.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000064 /* HabitReminderSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests/services/HabitReminderSchedulerTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -168,6 +174,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000013 /* Habit.swift */,
+				A10000000000000000000060 /* HabitReminder.swift */,
 				A10000000000000000000046 /* HabitHistoryDay.swift */,
 				A10000000000000000000058 /* HabitListFilter.swift */,
 				A10000000000000000000050 /* WeeklyHabitProgress.swift */,
@@ -180,6 +187,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000042 /* HabitPersistence.swift */,
+				A10000000000000000000062 /* HabitReminderScheduler.swift */,
 				A10000000000000000000014 /* HabitStore.swift */,
 			);
 			path = services;
@@ -201,6 +209,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000044 /* HabitPersistenceTests.swift */,
+				A10000000000000000000064 /* HabitReminderSchedulerTests.swift */,
 				A1000000000000000000001E /* HabitStoreTests.swift */,
 			);
 			path = services;
@@ -311,12 +320,14 @@
 				A10000000000000000000001 /* HabitTrackerApp.swift in Sources */,
 				A10000000000000000000002 /* AppConstants.swift in Sources */,
 				A10000000000000000000003 /* Habit.swift in Sources */,
+				A1000000000000000000005F /* HabitReminder.swift in Sources */,
 				A10000000000000000000045 /* HabitHistoryDay.swift in Sources */,
 				A10000000000000000000057 /* HabitListFilter.swift in Sources */,
 				A1000000000000000000004F /* WeeklyHabitProgress.swift in Sources */,
 				A1000000000000000000004D /* WeeklyProgressSummary.swift in Sources */,
 				A10000000000000000000004 /* HabitStore.swift in Sources */,
 				A10000000000000000000041 /* HabitPersistence.swift in Sources */,
+				A10000000000000000000061 /* HabitReminderScheduler.swift in Sources */,
 				A10000000000000000000005 /* DateValueFormatter.swift in Sources */,
 				A10000000000000000000047 /* HabitHistoryBuilder.swift in Sources */,
 				A10000000000000000000059 /* HabitListFilterer.swift in Sources */,
@@ -340,6 +351,7 @@
 				A1000000000000000000000D /* StreakCalculatorTests.swift in Sources */,
 				A1000000000000000000000E /* HabitStoreTests.swift in Sources */,
 				A10000000000000000000043 /* HabitPersistenceTests.swift in Sources */,
+				A10000000000000000000063 /* HabitReminderSchedulerTests.swift in Sources */,
 				A1000000000000000000004B /* HabitHistoryBuilderTests.swift in Sources */,
 				A1000000000000000000005B /* HabitListFiltererTests.swift in Sources */,
 				A10000000000000000000055 /* WeeklyProgressBuilderTests.swift in Sources */,

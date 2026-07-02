@@ -1,7 +1,7 @@
 //
 // Habit.swift
-// Model for a habit and the set of calendar days it was completed.
-// Connects to: services/HabitStore.swift, utils/StreakCalculator.swift
+// Model for a habit, its completed days, and optional reminder settings.
+// Connects to: services/HabitStore.swift, models/HabitReminder.swift, utils/StreakCalculator.swift
 // Created: 2026-07-01
 //
 
@@ -12,6 +12,21 @@ struct Habit: Identifiable, Equatable, Codable {
   let name: String
   let createdAt: Date
   var completedDayKeys: Set<String>
+  var reminder: HabitReminder?
+
+  init(
+    id: UUID,
+    name: String,
+    createdAt: Date,
+    completedDayKeys: Set<String>,
+    reminder: HabitReminder? = nil
+  ) {
+    self.id = id
+    self.name = name
+    self.createdAt = createdAt
+    self.completedDayKeys = completedDayKeys
+    self.reminder = reminder
+  }
 
   /// Returns a copy of the habit with a completion day added or removed.
   /// - Parameters:
@@ -27,13 +42,20 @@ struct Habit: Identifiable, Equatable, Codable {
       updatedDayKeys.remove(dayKey)
     }
 
-    return Habit(id: id, name: name, createdAt: createdAt, completedDayKeys: updatedDayKeys)
+    return Habit(id: id, name: name, createdAt: createdAt, completedDayKeys: updatedDayKeys, reminder: reminder)
   }
 
   /// Returns a copy of the habit with a renamed title.
   /// - Parameter name: The validated name to store.
   /// - Returns: A new habit with the updated name.
   func updatingName(_ name: String) -> Habit {
-    Habit(id: id, name: name, createdAt: createdAt, completedDayKeys: completedDayKeys)
+    Habit(id: id, name: name, createdAt: createdAt, completedDayKeys: completedDayKeys, reminder: reminder)
+  }
+
+  /// Returns a copy of the habit with updated reminder settings.
+  /// - Parameter reminder: The reminder to store, or `nil` to clear it.
+  /// - Returns: A new habit with the updated reminder state.
+  func updatingReminder(_ reminder: HabitReminder?) -> Habit {
+    Habit(id: id, name: name, createdAt: createdAt, completedDayKeys: completedDayKeys, reminder: reminder)
   }
 }

@@ -1,7 +1,7 @@
 //
 // HabitStore.swift
-// Observable store that manages habits, validation, and completion state.
-// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, models/HabitListFilter.swift, models/WeeklyHabitProgress.swift, models/WeeklyProgressSummary.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/HabitListFilterer.swift, utils/StreakCalculator.swift, utils/WeeklyProgressBuilder.swift
+// Observable store that manages habits, validation, completion state, and reminder scheduling.
+// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, models/HabitListFilter.swift, models/HabitReminder.swift, models/WeeklyHabitProgress.swift, models/WeeklyProgressSummary.swift, services/HabitPersistence.swift, services/HabitReminderScheduler.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/HabitListFilterer.swift, utils/StreakCalculator.swift, utils/WeeklyProgressBuilder.swift
 // Created: 2026-07-01
 //
 
@@ -16,6 +16,7 @@ final class HabitStore: ObservableObject {
 
   private let calendar: Calendar
   private let persistence: HabitPersisting
+  private let reminderScheduler: HabitReminderScheduling
   private let logger: Logger
 
   init(
@@ -24,6 +25,7 @@ final class HabitStore: ObservableObject {
     errorMessage: String? = nil,
     calendar: Calendar = .current,
     persistence: HabitPersisting = UserDefaultsHabitPersistence(),
+    reminderScheduler: HabitReminderScheduling = UserNotificationHabitReminderScheduler(),
     logger: Logger = Logger(subsystem: "HabitTracker", category: "HabitStore")
   ) {
     self.habits = habits
@@ -31,6 +33,7 @@ final class HabitStore: ObservableObject {
     self.errorMessage = errorMessage
     self.calendar = calendar
     self.persistence = persistence
+    self.reminderScheduler = reminderScheduler
     self.logger = logger
   }
 
@@ -113,6 +116,12 @@ final class HabitStore: ObservableObject {
       rollbackHabits: previousHabits,
       successLogMessage: "Deleted habit named \(deletedHabitName)"
     )
+
+    if errorMessage == nil {
+      Task {
+        await removeReminderAfterDelete(for: habit)
+      }
+    }
   }
 
   /// Toggles whether a habit is completed for the provided day.
@@ -254,6 +263,34 @@ final class HabitStore: ObservableObject {
     )
   }
 
+  /// Sets a daily reminder time for a habit and synchronizes notification scheduling.
+  /// - Parameters:
+  ///   - habit: The habit to update.
+  ///   - date: A date whose hour and minute are used for the daily reminder.
+  func setReminder(for habit: Habit, at date: Date) async {
+    let components = calendar.dateComponents([.hour, .minute], from: date)
+    let reminder = HabitReminder(
+      hour: components.hour ?? AppConstants.defaultReminderHour,
+      minute: components.minute ?? AppConstants.defaultReminderMinute
+    )
+
+    await applyReminderChange(
+      for: habit,
+      reminder: reminder,
+      successLogMessage: "Updated reminder for \(habit.name)"
+    )
+  }
+
+  /// Clears any reminder configured for a habit and unschedules its notification.
+  /// - Parameter habit: The habit whose reminder should be removed.
+  func clearReminder(for habit: Habit) async {
+    await applyReminderChange(
+      for: habit,
+      reminder: nil,
+      successLogMessage: "Cleared reminder for \(habit.name)"
+    )
+  }
+
   /// Clears the current user-facing error.
   func clearError() {
     errorMessage = nil
@@ -293,6 +330,74 @@ final class HabitStore: ObservableObject {
       habits = rollbackHabits
       errorMessage = "Your changes could not be saved."
       logger.error("Saving failed: \(error.localizedDescription, privacy: .public)")
+    }
+  }
+
+  /// Persists reminder changes and keeps scheduled notifications aligned with stored data.
+  private func applyReminderChange(for habit: Habit, reminder: HabitReminder?, successLogMessage: String) async {
+    guard let index = habits.firstIndex(where: { $0.id == habit.id }) else {
+      errorMessage = "That habit could not be updated."
+      logger.error("Missing habit for reminder change")
+      return
+    }
+
+    let previousHabits = habits
+    let updatedHabit = habits[index].updatingReminder(reminder)
+    habits[index] = updatedHabit
+
+    do {
+      try persistence.saveHabits(habits)
+      try await syncReminder(for: updatedHabit)
+      errorMessage = nil
+      logger.info("\(successLogMessage, privacy: .public)")
+    } catch {
+      habits = previousHabits
+
+      do {
+        try persistence.saveHabits(previousHabits)
+      } catch {
+        logger.error("Reminder rollback persistence failed: \(error.localizedDescription, privacy: .public)")
+      }
+
+      if let previousHabit = previousHabits.first(where: { $0.id == habit.id }) {
+        try? await syncReminder(for: previousHabit)
+      }
+
+      errorMessage = reminderErrorMessage(for: error)
+      logger.error("Reminder update failed: \(error.localizedDescription, privacy: .public)")
+    }
+  }
+
+  /// Synchronizes the scheduled notification state with the habit's reminder settings.
+  private func syncReminder(for habit: Habit) async throws {
+    if habit.reminder == nil {
+      try await reminderScheduler.removeReminder(for: habit.id)
+    } else {
+      try await reminderScheduler.upsertReminder(for: habit)
+    }
+  }
+
+  /// Builds a user-facing error message for reminder scheduling failures.
+  private func reminderErrorMessage(for error: Error) -> String {
+    if let schedulerError = error as? HabitReminderSchedulerError,
+       schedulerError == .permissionDenied {
+      return "Allow notifications before saving reminders."
+    }
+
+    return "Your reminder could not be saved."
+  }
+
+  /// Removes a deleted habit's scheduled reminder without interrupting the delete flow.
+  /// - Parameter habit: The habit that was deleted.
+  private func removeReminderAfterDelete(for habit: Habit) async {
+    guard habit.reminder != nil else {
+      return
+    }
+
+    do {
+      try await reminderScheduler.removeReminder(for: habit.id)
+    } catch {
+      logger.error("Deleting reminder failed: \(error.localizedDescription, privacy: .public)")
     }
   }
 }

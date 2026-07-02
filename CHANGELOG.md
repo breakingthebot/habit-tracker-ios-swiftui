@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0 - 2026-07-02
+- Add optional daily local reminders for each habit from the detail screen.
+- Add a reminder model plus a notification scheduler service to keep reminder logic out of the views.
+- Persist reminder settings with rollback behavior when notification permission is denied or scheduling fails.
+- Add tests for reminder request building, reminder persistence, rollback behavior, and reminder cleanup after habit deletion.
+
 ## 0.9.0 - 2026-07-02
 - Make the habit history screen editable instead of read-only.
 - Add a date-specific completion setter in the store for correcting past history entries.

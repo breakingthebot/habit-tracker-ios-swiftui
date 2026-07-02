@@ -1,7 +1,7 @@
 //
 // HabitDetailView.swift
-// Detail screen that shows streak stats and editable completion history for a selected habit.
-// Connects to: services/HabitStore.swift, models/HabitHistoryDay.swift, components/EditCompletionDateView.swift, utils/DateValueFormatter.swift
+// Detail screen that shows streak stats, editable completion history, and daily reminder controls for a selected habit.
+// Connects to: services/HabitStore.swift, models/HabitHistoryDay.swift, models/HabitReminder.swift, components/EditCompletionDateView.swift, components/ErrorBannerView.swift, config/AppConstants.swift, utils/DateValueFormatter.swift
 // Created: 2026-07-02
 //
 
@@ -11,11 +11,23 @@ struct HabitDetailView: View {
   @ObservedObject var store: HabitStore
   let habitID: UUID
   @State private var isPresentingAddCompletion = false
+  @State private var isReminderEnabled = false
+  @State private var reminderTime = HabitDetailView.defaultReminderDate()
 
   var body: some View {
     Group {
       if let habit = store.habit(withID: habitID) {
         List {
+          if let message = store.errorMessage {
+            Section {
+              ErrorBannerView(message: message) {
+                store.clearError()
+              }
+              .listRowInsets(EdgeInsets())
+              .listRowBackground(Color.clear)
+            }
+          }
+
           Section {
             VStack(alignment: .leading, spacing: 16) {
               Text(habit.name)
@@ -38,6 +50,20 @@ struct HabitDetailView: View {
               }
             }
             .padding(.vertical, 8)
+          }
+
+          Section("Reminder") {
+            Toggle("Daily reminder", isOn: reminderToggleBinding(for: habit))
+
+            if isReminderEnabled {
+              DatePicker(
+                "Reminder time",
+                selection: reminderTimeBinding(for: habit),
+                displayedComponents: .hourAndMinute
+              )
+            }
+          } footer: {
+            Text("The app can send one repeating local notification per habit each day.")
           }
 
           Section("Recent 7 Days") {
@@ -92,6 +118,12 @@ struct HabitDetailView: View {
           }
         }
         .listStyle(.insetGrouped)
+        .onAppear {
+          syncReminderState(from: habit.reminder)
+        }
+        .onChange(of: habit.reminder) { _, newReminder in
+          syncReminderState(from: newReminder)
+        }
         .toolbar {
           ToolbarItem(placement: .topBarTrailing) {
             Button {
@@ -128,6 +160,44 @@ struct HabitDetailView: View {
     .navigationBarTitleDisplayMode(.inline)
   }
 
+  /// Creates the toggle binding that enables or clears a habit reminder.
+  /// - Parameter habit: The habit currently shown on the detail screen.
+  /// - Returns: A binding that synchronizes the toggle with the store.
+  private func reminderToggleBinding(for habit: Habit) -> Binding<Bool> {
+    Binding(
+      get: { isReminderEnabled },
+      set: { isEnabled in
+        isReminderEnabled = isEnabled
+
+        if isEnabled {
+          Task {
+            await store.setReminder(for: habit, at: reminderTime)
+          }
+        } else {
+          Task {
+            await store.clearReminder(for: habit)
+          }
+        }
+      }
+    )
+  }
+
+  /// Creates the date binding used by the reminder time picker.
+  /// - Parameter habit: The habit currently shown on the detail screen.
+  /// - Returns: A binding that updates the store whenever the reminder time changes.
+  private func reminderTimeBinding(for habit: Habit) -> Binding<Date> {
+    Binding(
+      get: { reminderTime },
+      set: { newValue in
+        reminderTime = newValue
+
+        Task {
+          await store.setReminder(for: habit, at: newValue)
+        }
+      }
+    )
+  }
+
   /// Creates one metric card used in the detail summary.
   /// - Parameters:
   ///   - title: The label shown under the metric value.
@@ -146,5 +216,41 @@ struct HabitDetailView: View {
     .padding()
     .background(Color(.secondarySystemGroupedBackground))
     .clipShape(RoundedRectangle(cornerRadius: 14))
+  }
+
+  /// Synchronizes local reminder UI state with the stored habit reminder.
+  /// - Parameter reminder: The current persisted reminder, if one exists.
+  private func syncReminderState(from reminder: HabitReminder?) {
+    isReminderEnabled = reminder != nil
+    reminderTime = Self.date(from: reminder) ?? reminderTime
+  }
+
+  /// Converts a stored reminder into a `Date` suitable for the time picker.
+  /// - Parameter reminder: The reminder to convert.
+  /// - Returns: A date using today's calendar day and the reminder's time.
+  private static func date(from reminder: HabitReminder?) -> Date? {
+    guard let reminder else {
+      return nil
+    }
+
+    let calendar = Calendar.current
+    return calendar.date(
+      bySettingHour: reminder.hour,
+      minute: reminder.minute,
+      second: 0,
+      of: Date()
+    )
+  }
+
+  /// Builds the default reminder date shown when a habit has no reminder yet.
+  /// - Returns: A date using today's calendar day and the app default reminder time.
+  private static func defaultReminderDate() -> Date {
+    let calendar = Calendar.current
+    return calendar.date(
+      bySettingHour: AppConstants.defaultReminderHour,
+      minute: AppConstants.defaultReminderMinute,
+      second: 0,
+      of: Date()
+    ) ?? Date()
   }
 }
