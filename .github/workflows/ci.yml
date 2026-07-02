@@ -1,0 +1,41 @@
+# ci.yml
+# Runs the iOS test suite on GitHub Actions using a macOS runner.
+# Connects to: HabitTracker.xcodeproj, README.md, CHANGELOG.md
+# Created: 2026-07-02
+
+name: iOS CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run XCTest Suite
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Run unit tests
+        run: >
+          xcodebuild
+          test
+          -project HabitTracker.xcodeproj
+          -scheme HabitTracker
+          -destination "platform=iOS Simulator,OS=latest,name=iPhone 16"
+          CODE_SIGNING_ALLOWED=NO

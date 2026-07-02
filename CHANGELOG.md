@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 - 2026-07-02
+- Add a GitHub Actions workflow that runs the XCTest suite on a macOS runner.
+- Add a shared Xcode scheme so CI can resolve the app and test targets from a fresh checkout.
+- Update the README with CI behavior and workflow location.
+
 ## 0.3.0 - 2026-07-01
 - Add rename and delete support for habits through centralized store mutations.
 - Reuse the habit form sheet for both create and edit flows.
