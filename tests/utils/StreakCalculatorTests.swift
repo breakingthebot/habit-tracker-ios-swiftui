@@ -15,7 +15,7 @@ final class StreakCalculatorTests: XCTestCase {
   override func setUp() {
     super.setUp()
     calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = TimeZone(secondsFromGMT: 0)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
     anchorDate = calendar.date(from: DateComponents(year: 2026, month: 7, day: 1))
   }
 
