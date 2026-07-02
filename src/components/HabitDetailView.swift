@@ -163,7 +163,7 @@ struct HabitDetailView: View {
   private func allCompletionsSection(for habit: Habit) -> some View {
     let completionDates = store.completionDates(for: habit)
 
-    return Section("All Completions") {
+    return Section {
       if completionDates.isEmpty {
         Text("No completions recorded yet.")
           .foregroundStyle(.secondary)
@@ -173,11 +173,13 @@ struct HabitDetailView: View {
             .swipeActions(edge: .trailing) {
               Button("Remove", role: .destructive) {
                 store.setCompletion(for: habit, on: date, isCompleted: false)
-              }
-            }
+          }
         }
       }
+    } header: {
+      Text("All Completions")
     }
+  }
   }
 
   /// Builds one recent-history row showing the date and completion state.
