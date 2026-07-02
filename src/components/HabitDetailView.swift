@@ -17,137 +17,7 @@ struct HabitDetailView: View {
   var body: some View {
     Group {
       if let habit = store.habit(withID: habitID) {
-        List {
-          if let message = store.errorMessage {
-            Section {
-              ErrorBannerView(message: message) {
-                store.clearError()
-              }
-              .listRowInsets(EdgeInsets())
-              .listRowBackground(Color.clear)
-            }
-          }
-
-          Section {
-            VStack(alignment: .leading, spacing: 16) {
-              Text(habit.name)
-                .font(.largeTitle.weight(.bold))
-
-              Text("Created \(DateValueFormatter.longDisplayText(for: habit.createdAt))")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-              HStack(spacing: 12) {
-                detailMetric(
-                  title: "Current Streak",
-                  value: "\(store.streak(for: habit))"
-                )
-
-                detailMetric(
-                  title: "Total Check-ins",
-                  value: "\(store.totalCompletions(for: habit))"
-                )
-              }
-            }
-            .padding(.vertical, 8)
-          }
-
-          Section("Reminder") {
-            Toggle("Daily reminder", isOn: reminderToggleBinding(for: habit))
-
-            if isReminderEnabled {
-              DatePicker(
-                "Reminder time",
-                selection: reminderTimeBinding(for: habit),
-                displayedComponents: .hourAndMinute
-              )
-            }
-          } footer: {
-            Text("The app can send one repeating local notification per habit each day.")
-          }
-
-          Section("Recent 7 Days") {
-            ForEach(store.recentHistory(for: habit)) { historyDay in
-              Button {
-                store.setCompletion(for: habit, on: historyDay.date, isCompleted: !historyDay.isCompleted)
-              } label: {
-                HStack {
-                  VStack(alignment: .leading, spacing: 4) {
-                    Text(DateValueFormatter.shortDisplayText(for: historyDay.date))
-                      .font(.body.weight(.medium))
-
-                    Text(DateValueFormatter.longDisplayText(for: historyDay.date))
-                      .font(.caption)
-                      .foregroundStyle(.secondary)
-                  }
-
-                  Spacer()
-
-                  Label(
-                    historyDay.isCompleted ? "Completed" : "Missed",
-                    systemImage: historyDay.isCompleted ? "checkmark.circle.fill" : "circle"
-                  )
-                  .foregroundStyle(historyDay.isCompleted ? .green : .secondary)
-                  .labelStyle(.titleAndIcon)
-                }
-              }
-              .buttonStyle(.plain)
-            }
-
-            Text("Tap a day to toggle its completion state.")
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-
-          Section("All Completions") {
-            let completionDates = store.completionDates(for: habit)
-
-            if completionDates.isEmpty {
-              Text("No completions recorded yet.")
-                .foregroundStyle(.secondary)
-            } else {
-              ForEach(completionDates, id: \.self) { date in
-                Text(DateValueFormatter.longDisplayText(for: date))
-                  .swipeActions(edge: .trailing) {
-                    Button("Remove", role: .destructive) {
-                      store.setCompletion(for: habit, on: date, isCompleted: false)
-                    }
-                  }
-              }
-            }
-          }
-        }
-        .listStyle(.insetGrouped)
-        .onAppear {
-          syncReminderState(from: habit.reminder)
-        }
-        .onChange(of: habit.reminder) { _, newReminder in
-          syncReminderState(from: newReminder)
-        }
-        .toolbar {
-          ToolbarItem(placement: .topBarTrailing) {
-            Button {
-              isPresentingAddCompletion = true
-            } label: {
-              Label("Add Check-in", systemImage: "calendar.badge.plus")
-            }
-          }
-        }
-        .sheet(isPresented: $isPresentingAddCompletion) {
-          EditCompletionDateView(
-            habit: habit,
-            saveAction: { date in
-              store.setCompletion(for: habit, on: date, isCompleted: true)
-              if store.errorMessage == nil {
-                isPresentingAddCompletion = false
-              }
-            },
-            cancelAction: {
-              isPresentingAddCompletion = false
-            }
-          )
-          .presentationDetents([.medium])
-        }
+        detailList(for: habit)
       } else {
         ContentUnavailableView {
           Label("Habit Not Found", systemImage: "questionmark.circle")
@@ -158,6 +28,181 @@ struct HabitDetailView: View {
     }
     .navigationTitle("History")
     .navigationBarTitleDisplayMode(.inline)
+  }
+
+  /// Builds the main detail list for the current habit.
+  /// - Parameter habit: The latest stored version of the selected habit.
+  /// - Returns: The complete detail screen content for that habit.
+  private func detailList(for habit: Habit) -> some View {
+    List {
+      errorSection
+      summarySection(for: habit)
+      reminderSection(for: habit)
+      recentHistorySection(for: habit)
+      allCompletionsSection(for: habit)
+    }
+    .listStyle(.insetGrouped)
+    .onAppear {
+      syncReminderState(from: habit.reminder)
+    }
+    .onChange(of: habit.reminder) { _, newReminder in
+      syncReminderState(from: newReminder)
+    }
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button {
+          isPresentingAddCompletion = true
+        } label: {
+          Label("Add Check-in", systemImage: "calendar.badge.plus")
+        }
+      }
+    }
+    .sheet(isPresented: $isPresentingAddCompletion) {
+      EditCompletionDateView(
+        habit: habit,
+        saveAction: { date in
+          store.setCompletion(for: habit, on: date, isCompleted: true)
+          if store.errorMessage == nil {
+            isPresentingAddCompletion = false
+          }
+        },
+        cancelAction: {
+          isPresentingAddCompletion = false
+        }
+      )
+      .presentationDetents([.medium])
+    }
+  }
+
+  /// Shows the current store error when one exists.
+  /// - Returns: The inline error section at the top of the detail list.
+  @ViewBuilder
+  private var errorSection: some View {
+    if let message = store.errorMessage {
+      Section {
+        ErrorBannerView(message: message) {
+          store.clearError()
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+      }
+    }
+  }
+
+  /// Builds the summary metrics section for the selected habit.
+  /// - Parameter habit: The habit currently shown on screen.
+  /// - Returns: The top section with title, creation date, and key metrics.
+  private func summarySection(for habit: Habit) -> some View {
+    Section {
+      VStack(alignment: .leading, spacing: 16) {
+        Text(habit.name)
+          .font(.largeTitle.weight(.bold))
+
+        Text("Created \(DateValueFormatter.longDisplayText(for: habit.createdAt))")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+
+        HStack(spacing: 12) {
+          detailMetric(
+            title: "Current Streak",
+            value: "\(store.streak(for: habit))"
+          )
+
+          detailMetric(
+            title: "Total Check-ins",
+            value: "\(store.totalCompletions(for: habit))"
+          )
+        }
+      }
+      .padding(.vertical, 8)
+    }
+  }
+
+  /// Builds the reminder controls section for the selected habit.
+  /// - Parameter habit: The habit currently shown on screen.
+  /// - Returns: The reminder section with toggle and time picker.
+  private func reminderSection(for habit: Habit) -> some View {
+    Section("Reminder") {
+      Toggle("Daily reminder", isOn: reminderToggleBinding(for: habit))
+
+      if isReminderEnabled {
+        DatePicker(
+          "Reminder time",
+          selection: reminderTimeBinding(for: habit),
+          displayedComponents: .hourAndMinute
+        )
+      }
+    } footer: {
+      Text("The app can send one repeating local notification per habit each day.")
+    }
+  }
+
+  /// Builds the recent-history section for fast day-by-day edits.
+  /// - Parameter habit: The habit currently shown on screen.
+  /// - Returns: The recent-history section with tap-to-toggle rows.
+  private func recentHistorySection(for habit: Habit) -> some View {
+    Section("Recent 7 Days") {
+      ForEach(store.recentHistory(for: habit)) { historyDay in
+        Button {
+          store.setCompletion(for: habit, on: historyDay.date, isCompleted: !historyDay.isCompleted)
+        } label: {
+          historyRow(for: historyDay)
+        }
+        .buttonStyle(.plain)
+      }
+
+      Text("Tap a day to toggle its completion state.")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+  }
+
+  /// Builds the full completion-history section for the selected habit.
+  /// - Parameter habit: The habit currently shown on screen.
+  /// - Returns: The all-completions section with swipe-to-remove rows.
+  private func allCompletionsSection(for habit: Habit) -> some View {
+    let completionDates = store.completionDates(for: habit)
+
+    return Section("All Completions") {
+      if completionDates.isEmpty {
+        Text("No completions recorded yet.")
+          .foregroundStyle(.secondary)
+      } else {
+        ForEach(completionDates, id: \.self) { date in
+          Text(DateValueFormatter.longDisplayText(for: date))
+            .swipeActions(edge: .trailing) {
+              Button("Remove", role: .destructive) {
+                store.setCompletion(for: habit, on: date, isCompleted: false)
+              }
+            }
+        }
+      }
+    }
+  }
+
+  /// Builds one recent-history row showing the date and completion state.
+  /// - Parameter historyDay: The recent history entry to present.
+  /// - Returns: A single row used inside the recent-history section.
+  private func historyRow(for historyDay: HabitHistoryDay) -> some View {
+    HStack {
+      VStack(alignment: .leading, spacing: 4) {
+        Text(DateValueFormatter.shortDisplayText(for: historyDay.date))
+          .font(.body.weight(.medium))
+
+        Text(DateValueFormatter.longDisplayText(for: historyDay.date))
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
+      Spacer()
+
+      Label(
+        historyDay.isCompleted ? "Completed" : "Missed",
+        systemImage: historyDay.isCompleted ? "checkmark.circle.fill" : "circle"
+      )
+      .foregroundStyle(historyDay.isCompleted ? .green : .secondary)
+      .labelStyle(.titleAndIcon)
+    }
   }
 
   /// Creates the toggle binding that enables or clears a habit reminder.
