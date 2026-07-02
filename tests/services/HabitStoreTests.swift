@@ -231,6 +231,54 @@ final class HabitStoreTests: XCTestCase {
 
     XCTAssertEqual(filteredHabits.map(\.id), [completedHabit.id])
   }
+
+  /// Verifies that setting a specific completion date adds that day to the habit.
+  func testSetCompletionAddsSpecificDate() {
+    let habit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
+    let targetDate = Date(timeIntervalSince1970: 1_725_206_400)
+    let targetKey = DateValueFormatter.dayKey(for: targetDate)
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: TestHabitPersistence()
+    )
+
+    store.setCompletion(for: habit, on: targetDate, isCompleted: true)
+
+    XCTAssertTrue(store.habits[0].completedDayKeys.contains(targetKey))
+  }
+
+  /// Verifies that clearing a specific completion date removes that day from the habit.
+  func testSetCompletionRemovesSpecificDate() {
+    let targetDate = Date(timeIntervalSince1970: 1_725_206_400)
+    let targetKey = DateValueFormatter.dayKey(for: targetDate)
+    let habit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [targetKey])
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: TestHabitPersistence()
+    )
+
+    store.setCompletion(for: habit, on: targetDate, isCompleted: false)
+
+    XCTAssertFalse(store.habits[0].completedDayKeys.contains(targetKey))
+  }
+
+  /// Verifies that explicit completion updates roll back when saving fails.
+  func testSetCompletionRollsBackWhenSavingFails() {
+    let targetDate = Date(timeIntervalSince1970: 1_725_206_400)
+    let habit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: TestHabitPersistence(initialHabits: [habit], saveShouldFail: true)
+    )
+
+    store.setCompletion(for: habit, on: targetDate, isCompleted: true)
+
+    XCTAssertTrue(store.habits[0].completedDayKeys.isEmpty)
+    XCTAssertEqual(store.errorMessage, "Your changes could not be saved.")
+  }
 }
 
 private enum TestPersistenceError: Error {

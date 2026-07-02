@@ -35,6 +35,7 @@
 		A10000000000000000000057 /* HabitListFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000058 /* HabitListFilter.swift */; };
 		A10000000000000000000059 /* HabitListFilterer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000005A /* HabitListFilterer.swift */; };
 		A1000000000000000000005B /* HabitListFiltererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000005C /* HabitListFiltererTests.swift */; };
+		A1000000000000000000005D /* EditCompletionDateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000005E /* EditCompletionDateView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -78,6 +79,7 @@
 		A10000000000000000000058 /* HabitListFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/models/HabitListFilter.swift; sourceTree = SOURCE_ROOT; };
 		A1000000000000000000005A /* HabitListFilterer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/utils/HabitListFilterer.swift; sourceTree = SOURCE_ROOT; };
 		A1000000000000000000005C /* HabitListFiltererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests/utils/HabitListFiltererTests.swift; sourceTree = SOURCE_ROOT; };
+		A1000000000000000000005E /* EditCompletionDateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = src/components/EditCompletionDateView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +144,7 @@
 		A1000000000000000000002D /* components */ = {
 			isa = PBXGroup;
 			children = (
+				A1000000000000000000005E /* EditCompletionDateView.swift */,
 				A10000000000000000000054 /* WeeklyDashboardView.swift */,
 				A1000000000000000000004A /* HabitDetailView.swift */,
 				A10000000000000000000017 /* HabitListView.swift */,
@@ -320,6 +323,7 @@
 				A10000000000000000000006 /* StreakCalculator.swift in Sources */,
 				A10000000000000000000051 /* WeeklyProgressBuilder.swift in Sources */,
 				A10000000000000000000053 /* WeeklyDashboardView.swift in Sources */,
+				A1000000000000000000005D /* EditCompletionDateView.swift in Sources */,
 				A10000000000000000000049 /* HabitDetailView.swift in Sources */,
 				A10000000000000000000007 /* HabitListView.swift in Sources */,
 				A10000000000000000000008 /* HabitRowView.swift in Sources */,

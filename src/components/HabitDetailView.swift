@@ -1,7 +1,7 @@
 //
 // HabitDetailView.swift
-// Detail screen that shows streak stats and completion history for a selected habit.
-// Connects to: services/HabitStore.swift, models/HabitHistoryDay.swift, utils/DateValueFormatter.swift
+// Detail screen that shows streak stats and editable completion history for a selected habit.
+// Connects to: services/HabitStore.swift, models/HabitHistoryDay.swift, components/EditCompletionDateView.swift, utils/DateValueFormatter.swift
 // Created: 2026-07-02
 //
 
@@ -10,6 +10,7 @@ import SwiftUI
 struct HabitDetailView: View {
   @ObservedObject var store: HabitStore
   let habitID: UUID
+  @State private var isPresentingAddCompletion = false
 
   var body: some View {
     Group {
@@ -41,26 +42,35 @@ struct HabitDetailView: View {
 
           Section("Recent 7 Days") {
             ForEach(store.recentHistory(for: habit)) { historyDay in
-              HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                  Text(DateValueFormatter.shortDisplayText(for: historyDay.date))
-                    .font(.body.weight(.medium))
+              Button {
+                store.setCompletion(for: habit, on: historyDay.date, isCompleted: !historyDay.isCompleted)
+              } label: {
+                HStack {
+                  VStack(alignment: .leading, spacing: 4) {
+                    Text(DateValueFormatter.shortDisplayText(for: historyDay.date))
+                      .font(.body.weight(.medium))
 
-                  Text(DateValueFormatter.longDisplayText(for: historyDay.date))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    Text(DateValueFormatter.longDisplayText(for: historyDay.date))
+                      .font(.caption)
+                      .foregroundStyle(.secondary)
+                  }
+
+                  Spacer()
+
+                  Label(
+                    historyDay.isCompleted ? "Completed" : "Missed",
+                    systemImage: historyDay.isCompleted ? "checkmark.circle.fill" : "circle"
+                  )
+                  .foregroundStyle(historyDay.isCompleted ? .green : .secondary)
+                  .labelStyle(.titleAndIcon)
                 }
-
-                Spacer()
-
-                Label(
-                  historyDay.isCompleted ? "Completed" : "Missed",
-                  systemImage: historyDay.isCompleted ? "checkmark.circle.fill" : "circle"
-                )
-                .foregroundStyle(historyDay.isCompleted ? .green : .secondary)
-                .labelStyle(.titleAndIcon)
               }
+              .buttonStyle(.plain)
             }
+
+            Text("Tap a day to toggle its completion state.")
+              .font(.caption)
+              .foregroundStyle(.secondary)
           }
 
           Section("All Completions") {
@@ -72,11 +82,40 @@ struct HabitDetailView: View {
             } else {
               ForEach(completionDates, id: \.self) { date in
                 Text(DateValueFormatter.longDisplayText(for: date))
+                  .swipeActions(edge: .trailing) {
+                    Button("Remove", role: .destructive) {
+                      store.setCompletion(for: habit, on: date, isCompleted: false)
+                    }
+                  }
               }
             }
           }
         }
         .listStyle(.insetGrouped)
+        .toolbar {
+          ToolbarItem(placement: .topBarTrailing) {
+            Button {
+              isPresentingAddCompletion = true
+            } label: {
+              Label("Add Check-in", systemImage: "calendar.badge.plus")
+            }
+          }
+        }
+        .sheet(isPresented: $isPresentingAddCompletion) {
+          EditCompletionDateView(
+            habit: habit,
+            saveAction: { date in
+              store.setCompletion(for: habit, on: date, isCompleted: true)
+              if store.errorMessage == nil {
+                isPresentingAddCompletion = false
+              }
+            },
+            cancelAction: {
+              isPresentingAddCompletion = false
+            }
+          )
+          .presentationDetents([.medium])
+        }
       } else {
         ContentUnavailableView {
           Label("Habit Not Found", systemImage: "questionmark.circle")

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0 - 2026-07-02
+- Make the habit history screen editable instead of read-only.
+- Add a date-specific completion setter in the store for correcting past history entries.
+- Add a sheet for recording past completion dates plus removal actions for mistaken entries.
+- Add tests for adding, removing, and rollback behavior on explicit history edits.
+
 ## 0.8.0 - 2026-07-02
 - Add search and today-status filtering to the main habit list.
 - Add reusable list-filter models and filtering utilities to keep search logic out of the view layer.

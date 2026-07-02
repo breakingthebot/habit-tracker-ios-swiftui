@@ -136,6 +136,27 @@ final class HabitStore: ObservableObject {
     )
   }
 
+  /// Sets whether a habit is completed for a specific day.
+  /// - Parameters:
+  ///   - habit: The habit to update.
+  ///   - date: The calendar day being changed.
+  ///   - isCompleted: The desired completion state after the update.
+  func setCompletion(for habit: Habit, on date: Date, isCompleted: Bool) {
+    guard let index = habits.firstIndex(where: { $0.id == habit.id }) else {
+      errorMessage = "That habit could not be updated."
+      logger.error("Missing habit for explicit completion update")
+      return
+    }
+
+    let dayKey = DateValueFormatter.dayKey(for: date, calendar: calendar)
+    let previousHabits = habits
+    habits[index] = habits[index].updatingCompletion(dayKey: dayKey, isCompleted: isCompleted)
+    persistHabits(
+      rollbackHabits: previousHabits,
+      successLogMessage: "\(isCompleted ? "Marked" : "Removed") completion for \(habit.name) on \(dayKey)"
+    )
+  }
+
   /// Returns whether the supplied habit is complete today.
   /// - Parameter habit: The habit to inspect.
   /// - Returns: `true` when the habit is completed on the current day.
