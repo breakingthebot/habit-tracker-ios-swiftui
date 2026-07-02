@@ -122,7 +122,7 @@ struct HabitDetailView: View {
   /// - Parameter habit: The habit currently shown on screen.
   /// - Returns: The reminder section with toggle and time picker.
   private func reminderSection(for habit: Habit) -> some View {
-    Section("Reminder") {
+    Section {
       Toggle("Daily reminder", isOn: reminderToggleBinding(for: habit))
 
       if isReminderEnabled {
@@ -132,6 +132,8 @@ struct HabitDetailView: View {
           displayedComponents: .hourAndMinute
         )
       }
+    } header: {
+      Text("Reminder")
     } footer: {
       Text("The app can send one repeating local notification per habit each day.")
     }
@@ -141,7 +143,7 @@ struct HabitDetailView: View {
   /// - Parameter habit: The habit currently shown on screen.
   /// - Returns: The recent-history section with tap-to-toggle rows.
   private func recentHistorySection(for habit: Habit) -> some View {
-    Section("Recent 7 Days") {
+    Section {
       ForEach(store.recentHistory(for: habit)) { historyDay in
         Button {
           store.setCompletion(for: habit, on: historyDay.date, isCompleted: !historyDay.isCompleted)
@@ -154,6 +156,8 @@ struct HabitDetailView: View {
       Text("Tap a day to toggle its completion state.")
         .font(.caption)
         .foregroundStyle(.secondary)
+    } header: {
+      Text("Recent 7 Days")
     }
   }
 
@@ -173,13 +177,13 @@ struct HabitDetailView: View {
             .swipeActions(edge: .trailing) {
               Button("Remove", role: .destructive) {
                 store.setCompletion(for: habit, on: date, isCompleted: false)
-          }
+              }
+            }
         }
       }
     } header: {
       Text("All Completions")
     }
-  }
   }
 
   /// Builds one recent-history row showing the date and completion state.
