@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 - 2026-07-01
+- Add rename and delete support for habits through centralized store mutations.
+- Reuse the habit form sheet for both create and edit flows.
+- Add swipe actions and delete confirmation to the habit list UI.
+- Add tests for rename/delete success and rollback on persistence failures.
+
 ## 0.2.0 - 2026-07-01
 - Add a dedicated persistence service backed by `UserDefaults`.
 - Load saved habits during app startup and keep habits across app relaunches.

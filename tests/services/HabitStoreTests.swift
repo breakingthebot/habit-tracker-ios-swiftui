@@ -101,6 +101,68 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertTrue(store.habits.isEmpty)
     XCTAssertEqual(store.errorMessage, "Your changes could not be saved.")
   }
+
+  /// Verifies that renaming a habit updates the stored name.
+  func testRenameHabitUpdatesNameAndPersists() {
+    let habit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
+    let persistence = TestHabitPersistence(initialHabits: [habit])
+    let store = HabitStore(habits: [habit], isLoading: false, persistence: persistence)
+
+    store.renameHabit(habit, to: "Evening Walk")
+
+    XCTAssertEqual(store.habits.first?.name, "Evening Walk")
+    XCTAssertEqual(persistence.savedHabits.first?.name, "Evening Walk")
+    XCTAssertNil(store.errorMessage)
+  }
+
+  /// Verifies that deleting a habit removes it and persists the new list.
+  func testDeleteHabitRemovesHabitAndPersists() {
+    let firstHabit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
+    let secondHabit = Habit(id: UUID(), name: "Read", createdAt: Date(), completedDayKeys: [])
+    let persistence = TestHabitPersistence(initialHabits: [firstHabit, secondHabit])
+    let store = HabitStore(
+      habits: [firstHabit, secondHabit],
+      isLoading: false,
+      persistence: persistence
+    )
+
+    store.deleteHabit(firstHabit)
+
+    XCTAssertEqual(store.habits.count, 1)
+    XCTAssertEqual(store.habits.first?.name, "Read")
+    XCTAssertEqual(persistence.savedHabits.map(\.name), ["Read"])
+    XCTAssertNil(store.errorMessage)
+  }
+
+  /// Verifies that rename failures roll the in-memory change back.
+  func testRenameHabitRollsBackWhenSavingFails() {
+    let habit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: TestHabitPersistence(initialHabits: [habit], saveShouldFail: true)
+    )
+
+    store.renameHabit(habit, to: "Evening Walk")
+
+    XCTAssertEqual(store.habits.first?.name, "Walk")
+    XCTAssertEqual(store.errorMessage, "Your changes could not be saved.")
+  }
+
+  /// Verifies that delete failures restore the removed habit.
+  func testDeleteHabitRollsBackWhenSavingFails() {
+    let habit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: TestHabitPersistence(initialHabits: [habit], saveShouldFail: true)
+    )
+
+    store.deleteHabit(habit)
+
+    XCTAssertEqual(store.habits.map(\.name), ["Walk"])
+    XCTAssertEqual(store.errorMessage, "Your changes could not be saved.")
+  }
 }
 
 private enum TestPersistenceError: Error {

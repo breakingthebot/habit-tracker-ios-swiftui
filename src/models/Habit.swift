@@ -29,4 +29,11 @@ struct Habit: Identifiable, Equatable, Codable {
 
     return Habit(id: id, name: name, createdAt: createdAt, completedDayKeys: updatedDayKeys)
   }
+
+  /// Returns a copy of the habit with a renamed title.
+  /// - Parameter name: The validated name to store.
+  /// - Returns: A new habit with the updated name.
+  func updatingName(_ name: String) -> Habit {
+    Habit(id: id, name: name, createdAt: createdAt, completedDayKeys: completedDayKeys)
+  }
 }

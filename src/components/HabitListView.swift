@@ -10,6 +10,8 @@ import SwiftUI
 struct HabitListView: View {
   @ObservedObject var store: HabitStore
   @State private var isPresentingAddHabit = false
+  @State private var habitBeingEdited: Habit?
+  @State private var habitPendingDeletion: Habit?
 
   var body: some View {
     NavigationStack {
@@ -35,6 +37,16 @@ struct HabitListView: View {
                   currentStreak: store.streak(for: habit),
                   toggleAction: { store.toggleCompletion(for: habit) }
                 )
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                  Button("Delete", role: .destructive) {
+                    habitPendingDeletion = habit
+                  }
+
+                  Button("Edit") {
+                    habitBeingEdited = habit
+                  }
+                  .tint(.blue)
+                }
               }
             }
           }
@@ -53,6 +65,8 @@ struct HabitListView: View {
       }
       .sheet(isPresented: $isPresentingAddHabit) {
         AddHabitView(
+          title: "New Habit",
+          saveButtonTitle: "Save",
           saveAction: { name in
             store.addHabit(named: name)
             if store.errorMessage == nil {
@@ -65,7 +79,57 @@ struct HabitListView: View {
         )
         .presentationDetents([.medium])
       }
+      .sheet(item: $habitBeingEdited) { habit in
+        AddHabitView(
+          title: "Edit Habit",
+          saveButtonTitle: "Update",
+          initialHabitName: habit.name,
+          saveAction: { name in
+            store.renameHabit(habit, to: name)
+            if store.errorMessage == nil {
+              habitBeingEdited = nil
+            }
+          },
+          cancelAction: {
+            habitBeingEdited = nil
+          }
+        )
+        .presentationDetents([.medium])
+      }
+      .alert("Delete Habit?", isPresented: isDeleteAlertPresented) {
+        Button("Delete", role: .destructive) {
+          if let habitPendingDeletion {
+            store.deleteHabit(habitPendingDeletion)
+          }
+          self.habitPendingDeletion = nil
+        }
+
+        Button("Cancel", role: .cancel) {
+          habitPendingDeletion = nil
+        }
+      } message: {
+        Text(deleteAlertMessage)
+      }
     }
+  }
+
+  private var isDeleteAlertPresented: Binding<Bool> {
+    Binding(
+      get: { habitPendingDeletion != nil },
+      set: { isPresented in
+        if !isPresented {
+          habitPendingDeletion = nil
+        }
+      }
+    )
+  }
+
+  private var deleteAlertMessage: String {
+    guard let habitPendingDeletion else {
+      return "This habit will be removed from your tracker."
+    }
+
+    return "Delete \"\(habitPendingDeletion.name)\"? This cannot be undone."
   }
 }
 

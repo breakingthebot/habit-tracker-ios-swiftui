@@ -55,23 +55,13 @@ final class HabitStore: ObservableObject {
   /// Adds a new habit after validating the user-provided name.
   /// - Parameter rawName: The untrimmed habit name from the UI.
   func addHabit(named rawName: String) {
-    let trimmedName = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-    guard !trimmedName.isEmpty else {
-      errorMessage = "Enter a habit name before saving."
-      logger.warning("Rejected empty habit name")
-      return
-    }
-
-    guard trimmedName.count <= AppConstants.maxHabitNameLength else {
-      errorMessage = "Habit names must be \(AppConstants.maxHabitNameLength) characters or fewer."
-      logger.warning("Rejected long habit name")
+    guard let validatedName = validateHabitName(rawName) else {
       return
     }
 
     let habit = Habit(
       id: UUID(),
-      name: trimmedName,
+      name: validatedName,
       createdAt: Date(),
       completedDayKeys: []
     )
@@ -80,7 +70,48 @@ final class HabitStore: ObservableObject {
     habits.insert(habit, at: 0)
     persistHabits(
       rollbackHabits: previousHabits,
-      successLogMessage: "Added habit named \(trimmedName)"
+      successLogMessage: "Added habit named \(validatedName)"
+    )
+  }
+
+  /// Renames an existing habit after validating the new name.
+  /// - Parameters:
+  ///   - habit: The habit to rename.
+  ///   - rawName: The untrimmed replacement name from the UI.
+  func renameHabit(_ habit: Habit, to rawName: String) {
+    guard let validatedName = validateHabitName(rawName) else {
+      return
+    }
+
+    guard let index = habits.firstIndex(where: { $0.id == habit.id }) else {
+      errorMessage = "That habit could not be updated."
+      logger.error("Missing habit for rename")
+      return
+    }
+
+    let previousHabits = habits
+    habits[index] = habits[index].updatingName(validatedName)
+    persistHabits(
+      rollbackHabits: previousHabits,
+      successLogMessage: "Renamed habit to \(validatedName)"
+    )
+  }
+
+  /// Deletes a habit from the store and persists the new list.
+  /// - Parameter habit: The habit to remove.
+  func deleteHabit(_ habit: Habit) {
+    guard let index = habits.firstIndex(where: { $0.id == habit.id }) else {
+      errorMessage = "That habit could not be removed."
+      logger.error("Missing habit for delete")
+      return
+    }
+
+    let previousHabits = habits
+    let deletedHabitName = habits[index].name
+    habits.remove(at: index)
+    persistHabits(
+      rollbackHabits: previousHabits,
+      successLogMessage: "Deleted habit named \(deletedHabitName)"
     )
   }
 
@@ -127,6 +158,27 @@ final class HabitStore: ObservableObject {
   /// Clears the current user-facing error.
   func clearError() {
     errorMessage = nil
+  }
+
+  /// Validates and normalizes a raw habit name from the UI.
+  /// - Parameter rawName: The user-entered habit name.
+  /// - Returns: The trimmed name when valid, otherwise `nil`.
+  private func validateHabitName(_ rawName: String) -> String? {
+    let trimmedName = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    guard !trimmedName.isEmpty else {
+      errorMessage = "Enter a habit name before saving."
+      logger.warning("Rejected empty habit name")
+      return nil
+    }
+
+    guard trimmedName.count <= AppConstants.maxHabitNameLength else {
+      errorMessage = "Habit names must be \(AppConstants.maxHabitNameLength) characters or fewer."
+      logger.warning("Rejected long habit name")
+      return nil
+    }
+
+    return trimmedName
   }
 
   /// Persists the current habit list and surfaces any storage failures.
