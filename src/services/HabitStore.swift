@@ -1,7 +1,7 @@
 //
 // HabitStore.swift
 // Observable store that manages habits, validation, completion state, and reminder scheduling.
-// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, models/HabitListFilter.swift, models/HabitReminder.swift, models/WeeklyHabitProgress.swift, models/WeeklyProgressSummary.swift, services/HabitPersistence.swift, services/HabitReminderScheduler.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/HabitListFilterer.swift, utils/StreakCalculator.swift, utils/WeeklyProgressBuilder.swift
+// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, models/HabitListFilter.swift, models/HabitReminder.swift, models/WeeklyHabitProgress.swift, models/WeeklyProgressSummary.swift, services/HabitPersistence.swift, services/HabitReminderScheduler.swift, services/HabitWidgetReloader.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/HabitListFilterer.swift, utils/StreakCalculator.swift, utils/WeeklyProgressBuilder.swift
 // Created: 2026-07-01
 //
 
@@ -17,6 +17,7 @@ final class HabitStore: ObservableObject {
   private let calendar: Calendar
   private let persistence: HabitPersisting
   private let reminderScheduler: HabitReminderScheduling
+  private let widgetReloader: HabitWidgetReloading
   private let logger: Logger
 
   init(
@@ -26,6 +27,7 @@ final class HabitStore: ObservableObject {
     calendar: Calendar = .current,
     persistence: HabitPersisting = UserDefaultsHabitPersistence(),
     reminderScheduler: HabitReminderScheduling = UserNotificationHabitReminderScheduler(),
+    widgetReloader: HabitWidgetReloading = HabitWidgetReloader(),
     logger: Logger = Logger(subsystem: "HabitTracker", category: "HabitStore")
   ) {
     self.habits = habits
@@ -34,6 +36,7 @@ final class HabitStore: ObservableObject {
     self.calendar = calendar
     self.persistence = persistence
     self.reminderScheduler = reminderScheduler
+    self.widgetReloader = widgetReloader
     self.logger = logger
   }
 
@@ -325,6 +328,7 @@ final class HabitStore: ObservableObject {
     do {
       try persistence.saveHabits(habits)
       errorMessage = nil
+      widgetReloader.reloadAllTimelines()
       logger.info("\(successLogMessage, privacy: .public)")
     } catch {
       habits = rollbackHabits
@@ -349,6 +353,7 @@ final class HabitStore: ObservableObject {
       try persistence.saveHabits(habits)
       try await syncReminder(for: updatedHabit)
       errorMessage = nil
+      widgetReloader.reloadAllTimelines()
       logger.info("\(successLogMessage, privacy: .public)")
     } catch {
       habits = previousHabits

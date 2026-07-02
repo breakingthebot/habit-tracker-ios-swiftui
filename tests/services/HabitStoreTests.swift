@@ -1,7 +1,7 @@
 //
 // HabitStoreTests.swift
-// Unit tests for habit creation, completion state updates, and reminder persistence behavior.
-// Connects to: src/services/HabitStore.swift, src/services/HabitReminderScheduler.swift, src/models/Habit.swift, src/models/HabitReminder.swift
+// Unit tests for habit creation, completion state updates, reminder persistence behavior, and widget refresh hooks.
+// Connects to: src/services/HabitStore.swift, src/services/HabitReminderScheduler.swift, src/services/HabitWidgetReloader.swift, src/models/Habit.swift, src/models/HabitReminder.swift
 // Created: 2026-07-01
 //
 
@@ -13,7 +13,12 @@ final class HabitStoreTests: XCTestCase {
   /// Verifies that valid trimmed names create new habits.
   func testAddHabitTrimsNameAndClearsError() {
     let persistence = TestHabitPersistence()
-    let store = HabitStore(isLoading: false, persistence: persistence)
+    let widgetReloader = TestHabitWidgetReloader()
+    let store = HabitStore(
+      isLoading: false,
+      persistence: persistence,
+      widgetReloader: widgetReloader
+    )
 
     store.addHabit(named: "  Read for 20 minutes  ")
 
@@ -21,6 +26,7 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertEqual(store.habits.first?.name, "Read for 20 minutes")
     XCTAssertNil(store.errorMessage)
     XCTAssertEqual(persistence.savedHabits.count, 1)
+    XCTAssertEqual(widgetReloader.reloadCallCount, 1)
   }
 
   /// Verifies that empty names are rejected with a user-facing error.
@@ -91,28 +97,38 @@ final class HabitStoreTests: XCTestCase {
 
   /// Verifies that save failures surface a user-facing persistence error.
   func testAddHabitShowsErrorWhenSavingFails() {
+    let widgetReloader = TestHabitWidgetReloader()
     let store = HabitStore(
       isLoading: false,
-      persistence: TestHabitPersistence(saveShouldFail: true)
+      persistence: TestHabitPersistence(saveShouldFail: true),
+      widgetReloader: widgetReloader
     )
 
     store.addHabit(named: "Read")
 
     XCTAssertTrue(store.habits.isEmpty)
     XCTAssertEqual(store.errorMessage, "Your changes could not be saved.")
+    XCTAssertEqual(widgetReloader.reloadCallCount, 0)
   }
 
   /// Verifies that renaming a habit updates the stored name.
   func testRenameHabitUpdatesNameAndPersists() {
     let habit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
     let persistence = TestHabitPersistence(initialHabits: [habit])
-    let store = HabitStore(habits: [habit], isLoading: false, persistence: persistence)
+    let widgetReloader = TestHabitWidgetReloader()
+    let store = HabitStore(
+      habits: [habit],
+      isLoading: false,
+      persistence: persistence,
+      widgetReloader: widgetReloader
+    )
 
     store.renameHabit(habit, to: "Evening Walk")
 
     XCTAssertEqual(store.habits.first?.name, "Evening Walk")
     XCTAssertEqual(persistence.savedHabits.first?.name, "Evening Walk")
     XCTAssertNil(store.errorMessage)
+    XCTAssertEqual(widgetReloader.reloadCallCount, 1)
   }
 
   /// Verifies that deleting a habit removes it and persists the new list.
@@ -120,10 +136,12 @@ final class HabitStoreTests: XCTestCase {
     let firstHabit = Habit(id: UUID(), name: "Walk", createdAt: Date(), completedDayKeys: [])
     let secondHabit = Habit(id: UUID(), name: "Read", createdAt: Date(), completedDayKeys: [])
     let persistence = TestHabitPersistence(initialHabits: [firstHabit, secondHabit])
+    let widgetReloader = TestHabitWidgetReloader()
     let store = HabitStore(
       habits: [firstHabit, secondHabit],
       isLoading: false,
-      persistence: persistence
+      persistence: persistence,
+      widgetReloader: widgetReloader
     )
 
     store.deleteHabit(firstHabit)
@@ -132,6 +150,7 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertEqual(store.habits.first?.name, "Read")
     XCTAssertEqual(persistence.savedHabits.map(\.name), ["Read"])
     XCTAssertNil(store.errorMessage)
+    XCTAssertEqual(widgetReloader.reloadCallCount, 1)
   }
 
   /// Verifies that rename failures roll the in-memory change back.
@@ -285,6 +304,7 @@ final class HabitStoreTests: XCTestCase {
     let habit = Habit(id: UUID(), name: "Read", createdAt: Date(), completedDayKeys: [])
     let persistence = TestHabitPersistence(initialHabits: [habit])
     let scheduler = TestHabitReminderScheduler()
+    let widgetReloader = TestHabitWidgetReloader()
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = .gmt
     let store = HabitStore(
@@ -292,7 +312,8 @@ final class HabitStoreTests: XCTestCase {
       isLoading: false,
       calendar: calendar,
       persistence: persistence,
-      reminderScheduler: scheduler
+      reminderScheduler: scheduler,
+      widgetReloader: widgetReloader
     )
     let reminderDate = calendar.date(from: DateComponents(year: 2026, month: 7, day: 2, hour: 15, minute: 45))!
 
@@ -302,6 +323,7 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertEqual(persistence.savedHabits[0].reminder, HabitReminder(hour: 15, minute: 45))
     XCTAssertEqual(scheduler.upsertedHabits.first?.id, habit.id)
     XCTAssertNil(store.errorMessage)
+    XCTAssertEqual(widgetReloader.reloadCallCount, 1)
   }
 
   /// Verifies that clearing a reminder removes it from persistence and unschedules notifications.
@@ -315,11 +337,13 @@ final class HabitStoreTests: XCTestCase {
     )
     let persistence = TestHabitPersistence(initialHabits: [habit])
     let scheduler = TestHabitReminderScheduler()
+    let widgetReloader = TestHabitWidgetReloader()
     let store = HabitStore(
       habits: [habit],
       isLoading: false,
       persistence: persistence,
-      reminderScheduler: scheduler
+      reminderScheduler: scheduler,
+      widgetReloader: widgetReloader
     )
 
     await store.clearReminder(for: habit)
@@ -328,6 +352,7 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertNil(persistence.savedHabits[0].reminder)
     XCTAssertEqual(scheduler.removedHabitIDs, [habit.id])
     XCTAssertNil(store.errorMessage)
+    XCTAssertEqual(widgetReloader.reloadCallCount, 1)
   }
 
   /// Verifies that permission failures roll reminder changes back.
@@ -342,6 +367,7 @@ final class HabitStoreTests: XCTestCase {
     )
     let persistence = TestHabitPersistence(initialHabits: [habit])
     let scheduler = TestHabitReminderScheduler(upsertError: HabitReminderSchedulerError.permissionDenied)
+    let widgetReloader = TestHabitWidgetReloader()
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = .gmt
     let store = HabitStore(
@@ -349,7 +375,8 @@ final class HabitStoreTests: XCTestCase {
       isLoading: false,
       calendar: calendar,
       persistence: persistence,
-      reminderScheduler: scheduler
+      reminderScheduler: scheduler,
+      widgetReloader: widgetReloader
     )
     let reminderDate = calendar.date(from: DateComponents(year: 2026, month: 7, day: 2, hour: 15, minute: 45))!
 
@@ -358,6 +385,7 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertEqual(store.habits[0].reminder, originalReminder)
     XCTAssertEqual(persistence.savedHabits[0].reminder, originalReminder)
     XCTAssertEqual(store.errorMessage, "Allow notifications before saving reminders.")
+    XCTAssertEqual(widgetReloader.reloadCallCount, 0)
   }
 
   /// Verifies that deleting a habit with a reminder also unschedules its notification.
@@ -455,5 +483,14 @@ private final class TestHabitReminderScheduler: HabitReminderScheduling {
     }
 
     removedHabitIDs.append(habitID)
+  }
+}
+
+private final class TestHabitWidgetReloader: HabitWidgetReloading {
+  private(set) var reloadCallCount: Int = 0
+
+  /// Records each widget refresh request made by the store.
+  func reloadAllTimelines() {
+    reloadCallCount += 1
   }
 }

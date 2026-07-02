@@ -40,7 +40,7 @@ struct UserDefaultsHabitPersistence: HabitPersisting {
   private let logger: Logger
 
   init(
-    userDefaults: UserDefaults = .standard,
+    userDefaults: UserDefaults = UserDefaultsHabitPersistence.sharedUserDefaults(),
     storageKey: String = AppConstants.habitsStorageKey,
     decoder: JSONDecoder = JSONDecoder(),
     encoder: JSONEncoder = JSONEncoder(),
@@ -51,6 +51,12 @@ struct UserDefaultsHabitPersistence: HabitPersisting {
     self.decoder = decoder
     self.encoder = encoder
     self.logger = logger
+  }
+
+  /// Returns the shared app-group defaults store, falling back to `.standard` when unavailable.
+  /// - Returns: The `UserDefaults` instance used by both the app and widget.
+  static func sharedUserDefaults() -> UserDefaults {
+    UserDefaults(suiteName: AppConstants.appGroupIdentifier) ?? .standard
   }
 
   /// Loads habits from `UserDefaults`.

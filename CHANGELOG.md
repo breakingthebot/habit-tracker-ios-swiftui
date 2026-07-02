@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0 - 2026-07-02
+- Add a WidgetKit extension with small and medium home screen widgets for today's habit progress.
+- Move persisted habits into a shared app-group `UserDefaults` container so the app and widget read the same saved state.
+- Reload widget timelines automatically after successful habit and reminder changes.
+- Add tests for widget summary ranking plus store-level widget refresh behavior.
+
 ## 0.10.0 - 2026-07-02
 - Add optional daily local reminders for each habit from the detail screen.
 - Add a reminder model plus a notification scheduler service to keep reminder logic out of the views.
