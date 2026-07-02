@@ -204,6 +204,33 @@ final class HabitStoreTests: XCTestCase {
     XCTAssertEqual(summary.totalHabits, 2)
     XCTAssertEqual(summary.scheduledCheckIns, 14)
   }
+
+  /// Verifies that filtered habits return only items matching the chosen query and status.
+  func testFilteredHabitsAppliesSearchAndStatusFilter() {
+    let today = Date()
+    let completedKey = DateValueFormatter.dayKey(for: today)
+    let completedHabit = Habit(
+      id: UUID(),
+      name: "Walk Outside",
+      createdAt: today,
+      completedDayKeys: [completedKey]
+    )
+    let openHabit = Habit(
+      id: UUID(),
+      name: "Walk Dog",
+      createdAt: today,
+      completedDayKeys: []
+    )
+    let store = HabitStore(
+      habits: [completedHabit, openHabit],
+      isLoading: false,
+      persistence: TestHabitPersistence()
+    )
+
+    let filteredHabits = store.filteredHabits(searchText: "walk", filter: .completedToday)
+
+    XCTAssertEqual(filteredHabits.map(\.id), [completedHabit.id])
+  }
 }
 
 private enum TestPersistenceError: Error {

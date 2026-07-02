@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 - 2026-07-02
+- Add search and today-status filtering to the main habit list.
+- Add reusable list-filter models and filtering utilities to keep search logic out of the view layer.
+- Add empty-state messaging for filtered and searched result sets.
+- Add tests for search matching, status filters, and combined store filtering behavior.
+
 ## 0.7.0 - 2026-07-02
 - Protect `main` with a required GitHub Actions status check.
 - Require the passing `Run XCTest Suite` job before merges.

@@ -1,7 +1,7 @@
 //
 // HabitStore.swift
 // Observable store that manages habits, validation, and completion state.
-// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, models/WeeklyHabitProgress.swift, models/WeeklyProgressSummary.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/StreakCalculator.swift, utils/WeeklyProgressBuilder.swift
+// Connects to: models/Habit.swift, models/HabitHistoryDay.swift, models/HabitListFilter.swift, models/WeeklyHabitProgress.swift, models/WeeklyProgressSummary.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/HabitHistoryBuilder.swift, utils/HabitListFilterer.swift, utils/StreakCalculator.swift, utils/WeeklyProgressBuilder.swift
 // Created: 2026-07-01
 //
 
@@ -210,6 +210,26 @@ final class HabitStore: ObservableObject {
       habits: habits,
       referenceDate: Date(),
       calendar: calendar
+    )
+  }
+
+  /// Filters habits for the main list using search text and today-status selection.
+  /// - Parameters:
+  ///   - searchText: The raw user-entered query.
+  ///   - filter: The today-status filter to apply.
+  /// - Returns: A filtered list preserving the store order.
+  func filteredHabits(searchText: String, filter: HabitListFilter) -> [Habit] {
+    let completedTodayIDs = Set(
+      habits.compactMap { habit in
+        isCompletedToday(habit) ? habit.id : nil
+      }
+    )
+
+    return HabitListFilterer.filteredHabits(
+      habits: habits,
+      searchText: searchText,
+      filter: filter,
+      completedTodayIDs: completedTodayIDs
     )
   }
 
