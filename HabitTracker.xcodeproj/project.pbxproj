@@ -622,7 +622,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.breakingthebot.HabitTracker.HabitWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.breakingthebot.HabitTracker.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -650,7 +650,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.breakingthebot.HabitTracker.HabitWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.breakingthebot.HabitTracker.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;

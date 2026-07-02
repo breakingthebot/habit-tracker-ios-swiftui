@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
   <!-- Defines the widget extension metadata required for installation. -->
+  <key>CFBundleIdentifier</key>
+  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
   <key>CFBundleDisplayName</key>
   <string>Habit Widgets</string>
   <key>NSExtension</key>
