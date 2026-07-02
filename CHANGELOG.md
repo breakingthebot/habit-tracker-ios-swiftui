@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0 - 2026-07-02
+- Protect `main` with a required GitHub Actions status check.
+- Require the passing `Run XCTest Suite` job before merges.
+- Update the README to document the enforced CI gate.
+
 ## 0.6.0 - 2026-07-02
 - Add a weekly dashboard screen with overall check-in totals, completion rate, and per-habit weekly progress.
 - Add reusable weekly progress models and builder utilities for current-week aggregation.

@@ -29,12 +29,13 @@ No environment variables are required right now. See `.env.example`.
 ## CI
 - GitHub Actions runs the XCTest suite on a macOS runner for pushes and pull requests to `main`.
 - The workflow lives at `.github/workflows/ci.yml` and uses the shared `HabitTracker` scheme.
+- Branch protection on `main` requires the `Run XCTest Suite` check to pass before merges.
 
 ## Deployed
 Not deployed. This project is intended to run locally in Xcode.
 
 ## Architecture Notes
-The app is structured as a small but deliberate vertical slice: models for habit data, a store service for state transitions, a separate persistence service for storage, utilities for date and streak rules, and thin SwiftUI views for presentation. After persistence, CRUD, and habit history were stable, I added a weekly progress builder and dashboard screen so the same normalized completion data can drive both per-habit detail views and cross-habit summary metrics. The project also includes a shared Xcode scheme and GitHub Actions workflow so the XCTest path runs automatically on macOS CI.
+The app is structured as a small but deliberate vertical slice: models for habit data, a store service for state transitions, a separate persistence service for storage, utilities for date and streak rules, and thin SwiftUI views for presentation. After persistence, CRUD, and habit history were stable, I added a weekly progress builder and dashboard screen so the same normalized completion data can drive both per-habit detail views and cross-habit summary metrics. The project also includes a shared Xcode scheme and GitHub Actions workflow so the XCTest path runs automatically on macOS CI, and `main` is now protected by that passing check.
 
 ## Notes
 - The app includes loading, empty, and validation error states.
@@ -43,4 +44,5 @@ The app is structured as a small but deliberate vertical slice: models for habit
 - Habit rows open a detail screen with recent history and all recorded completion dates.
 - The top-left dashboard action opens current-week summary metrics across all habits.
 - CI runs on GitHub Actions because the local Windows workspace cannot execute Xcode builds.
+- `main` is protected by the passing `Run XCTest Suite` status check.
 - Automated Swift build execution was not available in this Windows workspace because the Swift/Xcode toolchain is not installed here.
