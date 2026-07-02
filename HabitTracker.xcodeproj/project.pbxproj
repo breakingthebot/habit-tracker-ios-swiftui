@@ -55,6 +55,8 @@
 		A10000000000000000000072 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* StreakCalculator.swift */; };
 		A10000000000000000000073 /* HabitPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000042 /* HabitPersistence.swift */; };
 		A10000000000000000000074 /* HabitWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000076 /* HabitWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A1000000000000000000008D /* WidgetHabitSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000007B /* WidgetHabitSummary.swift */; };
+		A1000000000000000000008E /* WidgetHabitSummaryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000007C /* WidgetHabitSummaryBuilder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -435,6 +437,8 @@
 				A10000000000000000000041 /* HabitPersistence.swift in Sources */,
 				A10000000000000000000061 /* HabitReminderScheduler.swift in Sources */,
 				A10000000000000000000065 /* HabitWidgetReloader.swift in Sources */,
+				A1000000000000000000008D /* WidgetHabitSummary.swift in Sources */,
+				A1000000000000000000008E /* WidgetHabitSummaryBuilder.swift in Sources */,
 				A10000000000000000000005 /* DateValueFormatter.swift in Sources */,
 				A10000000000000000000047 /* HabitHistoryBuilder.swift in Sources */,
 				A10000000000000000000059 /* HabitListFilterer.swift in Sources */,
