@@ -1,6 +1,6 @@
 # Habit Tracker iOS App
 
-A SwiftUI habit tracker that lets you add habits, mark daily completion, and view current streaks.
+A SwiftUI habit tracker that lets you add habits, mark daily completion, view current streaks, and keep your habits saved between app launches.
 
 ## Stack
 - Swift 5
@@ -21,14 +21,16 @@ No environment variables are required right now. See `.env.example`.
 1. Open `HabitTracker.xcodeproj`.
 2. Choose an iPhone simulator such as iPhone 16.
 3. Press Run in Xcode.
+4. Stop and rerun the app to confirm habits persist.
 
 ## Deployed
 Not deployed. This project is intended to run locally in Xcode.
 
 ## Architecture Notes
-This first iteration is a small, usable vertical slice of the app. I split the app into models, a store service, utilities, and focused SwiftUI components so the UI stays thin and the habit rules can be tested separately. The store currently keeps data in memory only, which makes it easy to validate the add-complete-streak flow before bringing in persistence.
+The app is structured as a small but deliberate vertical slice: models for habit data, a store service for state transitions, a separate persistence service for storage, utilities for date and streak rules, and thin SwiftUI views for presentation. I added persistence as the second iteration so the app now survives relaunches without tangling storage code into the UI, and the tests cover both the pure streak logic and the load/save behavior.
 
 ## Notes
 - The app includes loading, empty, and validation error states.
-- Habit data resets when the app restarts because persistence has not been added yet.
+- Habits are persisted with `UserDefaults` using JSON encoding.
+- The app currently supports adding and toggling habits, but not editing or deleting them yet.
 - Automated Swift build execution was not available in this Windows workspace because the Swift/Xcode toolchain is not installed here.

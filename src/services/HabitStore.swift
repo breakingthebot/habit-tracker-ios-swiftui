@@ -1,7 +1,7 @@
 //
 // HabitStore.swift
 // Observable store that manages habits, validation, and completion state.
-// Connects to: models/Habit.swift, utils/DateValueFormatter.swift, utils/StreakCalculator.swift
+// Connects to: models/Habit.swift, services/HabitPersistence.swift, utils/DateValueFormatter.swift, utils/StreakCalculator.swift
 // Created: 2026-07-01
 //
 
@@ -15,6 +15,7 @@ final class HabitStore: ObservableObject {
   @Published private(set) var errorMessage: String?
 
   private let calendar: Calendar
+  private let persistence: HabitPersisting
   private let logger: Logger
 
   init(
@@ -22,27 +23,31 @@ final class HabitStore: ObservableObject {
     isLoading: Bool = true,
     errorMessage: String? = nil,
     calendar: Calendar = .current,
+    persistence: HabitPersisting = UserDefaultsHabitPersistence(),
     logger: Logger = Logger(subsystem: "HabitTracker", category: "HabitStore")
   ) {
     self.habits = habits
     self.isLoading = isLoading
     self.errorMessage = errorMessage
     self.calendar = calendar
+    self.persistence = persistence
     self.logger = logger
   }
 
-  /// Simulates the initial app bootstrap before the first screen is shown.
+  /// Loads persisted habits during app startup.
   func loadInitialHabits() async {
     logger.info("Loading initial habits")
     isLoading = true
 
     do {
       try await Task.sleep(nanoseconds: AppConstants.loadingDelayNanoseconds)
+      habits = try persistence.loadHabits()
+      errorMessage = nil
       isLoading = false
       logger.info("Initial habits loaded")
     } catch {
       isLoading = false
-      errorMessage = "The app could not finish loading."
+      errorMessage = "Saved habits could not be loaded."
       logger.error("Loading failed: \(error.localizedDescription, privacy: .public)")
     }
   }
@@ -71,9 +76,12 @@ final class HabitStore: ObservableObject {
       completedDayKeys: []
     )
 
+    let previousHabits = habits
     habits.insert(habit, at: 0)
-    errorMessage = nil
-    logger.info("Added habit named \(trimmedName, privacy: .public)")
+    persistHabits(
+      rollbackHabits: previousHabits,
+      successLogMessage: "Added habit named \(trimmedName)"
+    )
   }
 
   /// Toggles whether a habit is completed for the provided day.
@@ -89,9 +97,12 @@ final class HabitStore: ObservableObject {
 
     let dayKey = DateValueFormatter.dayKey(for: date, calendar: calendar)
     let isCurrentlyCompleted = habits[index].completedDayKeys.contains(dayKey)
+    let previousHabits = habits
     habits[index] = habits[index].updatingCompletion(dayKey: dayKey, isCompleted: !isCurrentlyCompleted)
-    errorMessage = nil
-    logger.info("Toggled completion for \(habit.name, privacy: .public) on \(dayKey, privacy: .public)")
+    persistHabits(
+      rollbackHabits: previousHabits,
+      successLogMessage: "Toggled completion for \(habit.name) on \(dayKey)"
+    )
   }
 
   /// Returns whether the supplied habit is complete today.
@@ -116,5 +127,21 @@ final class HabitStore: ObservableObject {
   /// Clears the current user-facing error.
   func clearError() {
     errorMessage = nil
+  }
+
+  /// Persists the current habit list and surfaces any storage failures.
+  /// - Parameters:
+  ///   - rollbackHabits: The previous state used when persistence fails.
+  ///   - successLogMessage: The log line emitted after a successful save.
+  private func persistHabits(rollbackHabits: [Habit], successLogMessage: String) {
+    do {
+      try persistence.saveHabits(habits)
+      errorMessage = nil
+      logger.info("\(successLogMessage, privacy: .public)")
+    } catch {
+      habits = rollbackHabits
+      errorMessage = "Your changes could not be saved."
+      logger.error("Saving failed: \(error.localizedDescription, privacy: .public)")
+    }
   }
 }
