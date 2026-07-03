@@ -9,6 +9,8 @@
   <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
   <key>CFBundleDisplayName</key>
   <string>Habit Widgets</string>
+  <key>CFBundleName</key>
+  <string>$(PRODUCT_NAME)</string>
   <key>CFBundleShortVersionString</key>
   <string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key>
